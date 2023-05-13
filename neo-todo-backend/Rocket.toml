@@ -1,0 +1,2 @@
+[default.databases.todo_db]
+url="mysql://root:123456@0.0.0.0:3306/TestTodoDB"

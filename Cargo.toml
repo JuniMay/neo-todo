@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    ".",
+    "neo-todo",
+    "neo-todo-backend",    
+]
