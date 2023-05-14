@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate rocket;
 
-use neo_todo::{CommonTask, DurationTask, ReminderTask, TaskID};
+use neo_todo::{Category, CommonTask, DurationTask, ReminderTask, Tag, TaskID};
 use rocket::{http::Status, response::Responder, serde::json::Json};
 use rocket_db_pools::{
     sqlx::{self, Row},
@@ -421,6 +421,52 @@ INSERT INTO tbl_reminder_task (
     Ok(())
 }
 
+#[post("/tag", data = "<tag>")]
+async fn create_tag(mut db: Connection<Db>, tag: Json<Tag>) -> Result<(), TodoError> {
+    let tag = tag.into_inner();
+    let _tag_id = tag.id;
+    let tag_name = tag.name;
+
+    let _insert_result = sqlx::query(
+        "
+INSERT INTO tbl_tag (
+    tag_name
+) VALUES (?)",
+    )
+    .bind(tag_name)
+    .execute(&mut *db)
+    .await
+    .map_err(|_| TodoError::InternalServerError)?;
+
+    Ok(())
+}
+
+#[post("/category", data = "<category>")]
+async fn create_category(
+    mut db: Connection<Db>,
+    category: Json<Category>,
+) -> Result<(), TodoError> {
+    let category = category.into_inner();
+    let _category_id = category.id;
+    let category_name = category.name;
+    let category_description = category.description;
+
+    let _insert_result = sqlx::query(
+        "
+INSERT INTO tbl_category (
+    category_name,
+    category_description
+) VALUES (?, ?)",
+    )
+    .bind(category_name)
+    .bind(category_description)
+    .execute(&mut *db)
+    .await
+    .map_err(|_| TodoError::InternalServerError)?;
+
+    Ok(())
+}
+
 #[rocket::main]
 async fn main() -> anyhow::Result<()> {
     let rocket = rocket::build();
@@ -432,7 +478,9 @@ async fn main() -> anyhow::Result<()> {
             routes![
                 create_common_task,
                 create_duration_task,
-                create_reminder_task
+                create_reminder_task,
+                create_tag,
+                create_category,
             ],
         )
         .mount(

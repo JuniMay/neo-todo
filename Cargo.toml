@@ -2,5 +2,5 @@
 members = [
     ".",
     "neo-todo",
-    "neo-todo-backend",    
+    "neo-todo-backend",
 ]
