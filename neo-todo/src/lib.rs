@@ -55,6 +55,8 @@ pub struct CommonTask {
     pub priority: Option<Priority>,
     pub status: Option<String>,
     pub category_id: Option<CategoryID>,
+
+    pub kind: u32,
 }
 
 impl Task for DurationTask {

@@ -55,6 +55,7 @@ SELECT * FROM tbl_task",
         priority: row.get(4),
         status: row.get(5),
         category_id: row.get(6),
+        kind: row.get(7),
     })
     .collect();
 
@@ -80,6 +81,7 @@ SELECT * FROM tbl_task",
         priority: row.get(4),
         status: row.get(5),
         category_id: row.get(6),
+        kind: row.get(7),
     })
     .collect();
 
@@ -108,6 +110,7 @@ SELECT * FROM tbl_task WHERE task_id = ?",
             priority: row.get(4),
             status: row.get(5),
             category_id: row.get(6),
+            kind: row.get(7),
         })
     });
     result
@@ -283,8 +286,9 @@ INSERT INTO tbl_task (
     task_deadline, 
     task_priority, 
     task_status, 
-    category_id
-) VALUES (?, ?, ?, ?, ?, ?)",
+    category_id,
+    kind
+) VALUES (?, ?, ?, ?, ?, ?, ?)",
     )
     .bind(title)
     .bind(description)
@@ -292,6 +296,7 @@ INSERT INTO tbl_task (
     .bind(priority)
     .bind(status)
     .bind(category_id)
+    .bind(0)
     .execute(&mut *db)
     .await?;
 
@@ -341,11 +346,7 @@ INSERT INTO tbl_task (
 
     let _ = sqlx::query(
         "
-INSERT INTO tbl_duration_task (
-    task_id,
-    start_time,
-    end_time
-) VALUES (?, ?, ?)",
+CALL to_duration (?, ?, ?)",
     )
     .bind(last_id)
     .bind(start_time)
@@ -396,10 +397,7 @@ INSERT INTO tbl_task (
 
     let _ = sqlx::query(
         "
-INSERT INTO tbl_reminder_task (
-    task_id,
-    remind_time
-) VALUES (?, ?)",
+CALL to_reminder (?, ?)",
     )
     .bind(last_id)
     .bind(remind_time)

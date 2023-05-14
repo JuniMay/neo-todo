@@ -33,6 +33,10 @@ CREATE TABLE IF NOT EXISTS tbl_task (
     task_priority INT UNSIGNED,
     task_status TEXT,
     category_id INT UNSIGNED,
+    -- 0: common
+    -- 1: duration
+    -- 2: reminder
+    kind INT UNSIGNED DEFAULT 0,
     PRIMARY KEY (task_id)
 );
 
@@ -95,6 +99,8 @@ BEGIN
     DELETE FROM tbl_duration_task WHERE task_id = in_task_id;
     DELETE FROM tbl_reminder_task WHERE task_id = in_task_id;
 
+    UPDATE tbl_task SET kind = 0 WHERE task_id = in_task_id;
+
     COMMIT;
 END;
 
@@ -118,6 +124,8 @@ CREATE PROCEDURE to_duration(
     INSERT INTO tbl_duration_task(task_id, start_time, end_time) 
     VALUES (in_task_id, in_start_time, in_end_time);
 
+    UPDATE tbl_task SET kind = 1 WHERE task_id = in_task_id;
+
     COMMIT;
 END;
 
@@ -137,6 +145,8 @@ CREATE PROCEDURE to_reminder(
     DELETE FROM tbl_reminder_task WHERE task_id = in_task_id;
     
     INSERT INTO tbl_reminder_task(task_id, remind_time) VALUES(in_task_id, in_remind_time);
+
+    UPDATE tbl_task SET kind = 2 WHERE task_id = in_task_id;
 
     COMMIT;
 END;
