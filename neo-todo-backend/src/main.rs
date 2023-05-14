@@ -1,12 +1,17 @@
 #[macro_use]
 extern crate rocket;
 
-use neo_todo::{Category, CommonTask, DurationTask, ReminderTask, Tag, TaskID};
+use chrono::prelude::*;
+use neo_todo::{
+    Category, CategoryID, CommonTask, DurationTask, ReminderTask, Tag, TagID, TaskID, TaskTag,
+};
 use rocket::{http::Status, response::Responder, serde::json::Json};
 use rocket_db_pools::{
     sqlx::{self, Row},
     Connection, Database,
 };
+use serde::{Deserialize, Serialize};
+use sqlx::Acquire;
 
 #[derive(Database)]
 #[database("todo_db")]
@@ -27,6 +32,12 @@ impl<'r> Responder<'r, 'static> for TodoError {
     }
 }
 
+impl From<sqlx::Error> for TodoError {
+    fn from(_: sqlx::Error) -> Self {
+        TodoError::InternalServerError
+    }
+}
+
 #[get("/")]
 async fn index(mut db: Connection<Db>) -> Result<Json<Vec<CommonTask>>, TodoError> {
     let result = sqlx::query(
@@ -34,25 +45,20 @@ async fn index(mut db: Connection<Db>) -> Result<Json<Vec<CommonTask>>, TodoErro
 SELECT * FROM tbl_task",
     )
     .fetch_all(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)
-    .map(|v| {
-        let mut tasks = Vec::new();
-        for row in v {
-            tasks.push(CommonTask {
-                id: row.get(0),
-                title: row.get(1),
-                description: row.get(2),
-                deadline: row.get(3),
-                priority: row.get(4),
-                status: row.get(5),
-                category_id: row.get(6),
-            });
-        }
-        Json(tasks)
-    });
+    .await?
+    .into_iter()
+    .map(|row| CommonTask {
+        id: row.get(0),
+        title: row.get(1),
+        description: row.get(2),
+        deadline: row.get(3),
+        priority: row.get(4),
+        status: row.get(5),
+        category_id: row.get(6),
+    })
+    .collect();
 
-    result
+    Ok(Json(result))
 }
 
 #[get("/all-common-tasks")]
@@ -64,28 +70,23 @@ async fn fetch_all_common_tasks(
 SELECT * FROM tbl_task",
     )
     .fetch_all(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)
-    .map(|v| {
-        let mut tasks = Vec::new();
-        for row in v {
-            tasks.push(CommonTask {
-                id: row.get(0),
-                title: row.get(1),
-                description: row.get(2),
-                deadline: row.get(3),
-                priority: row.get(4),
-                status: row.get(5),
-                category_id: row.get(6),
-            });
-        }
-        Json(tasks)
-    });
+    .await?
+    .into_iter()
+    .map(|row| CommonTask {
+        id: row.get(0),
+        title: row.get(1),
+        description: row.get(2),
+        deadline: row.get(3),
+        priority: row.get(4),
+        status: row.get(5),
+        category_id: row.get(6),
+    })
+    .collect();
 
-    result
+    Ok(Json(result))
 }
 
-#[get("/common-task/<id>")]
+#[get("/common-task?<id>")]
 async fn fetch_common_task(
     mut db: Connection<Db>,
     id: TaskID,
@@ -112,7 +113,7 @@ SELECT * FROM tbl_task WHERE task_id = ?",
     result
 }
 
-#[get("/duration-task/<id>")]
+#[get("/duration-task?<id>")]
 async fn fetch_duration_task(
     mut db: Connection<Db>,
     id: TaskID,
@@ -129,7 +130,7 @@ SELECT
     category_id, 
     start_time, 
     end_time
-FROM tbl_task NATURAL JOIN tbl_duration_task WHERE task_id = ?",
+FROM v_duration_task WHERE task_id = ?",
     )
     .bind(id)
     .fetch_one(&mut *db)
@@ -151,7 +152,7 @@ FROM tbl_task NATURAL JOIN tbl_duration_task WHERE task_id = ?",
     result
 }
 
-#[get("/reminder-task/<id>")]
+#[get("/reminder-task?<id>")]
 async fn fetch_reminder_task(
     mut db: Connection<Db>,
     id: TaskID,
@@ -167,7 +168,7 @@ SELECT
     task_status, 
     category_id, 
     remind_time
-FROM tbl_task NATURAL JOIN tbl_reminder_task WHERE task_id = ?",
+FROM v_reminder_task WHERE task_id = ?",
     )
     .bind(id)
     .fetch_one(&mut *db)
@@ -204,29 +205,25 @@ SELECT
     category_id, 
     start_time, 
     end_time
-FROM tbl_task NATURAL JOIN tbl_duration_task",
+FROM v_duration_task",
     )
     .fetch_all(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)
-    .map(|v| {
-        let mut tasks = Vec::new();
-        for row in v {
-            tasks.push(DurationTask {
-                id: row.get(0),
-                title: row.get(1),
-                description: row.get(2),
-                deadline: row.get(3),
-                priority: row.get(4),
-                status: row.get(5),
-                category_id: row.get(6),
-                start_time: row.get(7),
-                end_time: row.get(8),
-            });
-        }
-        Json(tasks)
-    });
-    result
+    .await?
+    .into_iter()
+    .map(|row| DurationTask {
+        id: row.get(0),
+        title: row.get(1),
+        description: row.get(2),
+        deadline: row.get(3),
+        priority: row.get(4),
+        status: row.get(5),
+        category_id: row.get(6),
+        start_time: row.get(7),
+        end_time: row.get(8),
+    })
+    .collect();
+
+    Ok(Json(result))
 }
 
 #[get("/all-reminder-tasks")]
@@ -244,28 +241,24 @@ SELECT
     task_status, 
     category_id, 
     remind_time
-FROM tbl_task NATURAL JOIN tbl_reminder_task",
+FROM v_reminder_task",
     )
     .fetch_all(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)
-    .map(|v| {
-        let mut tasks = Vec::new();
-        for row in v {
-            tasks.push(ReminderTask {
-                id: row.get(0),
-                title: row.get(1),
-                description: row.get(2),
-                deadline: row.get(3),
-                priority: row.get(4),
-                status: row.get(5),
-                category_id: row.get(6),
-                remind_time: row.get(7),
-            });
-        }
-        Json(tasks)
-    });
-    result
+    .await?
+    .into_iter()
+    .map(|row| ReminderTask {
+        id: row.get(0),
+        title: row.get(1),
+        description: row.get(2),
+        deadline: row.get(3),
+        priority: row.get(4),
+        status: row.get(5),
+        category_id: row.get(6),
+        remind_time: row.get(7),
+    })
+    .collect();
+
+    Ok(Json(result))
 }
 
 #[post("/common-task", data = "<task>")]
@@ -300,8 +293,7 @@ INSERT INTO tbl_task (
     .bind(status)
     .bind(category_id)
     .execute(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)?;
+    .await?;
 
     let _last_id = insert_result.last_insert_id();
 
@@ -343,8 +335,7 @@ INSERT INTO tbl_task (
     .bind(status)
     .bind(category_id)
     .execute(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)?;
+    .await?;
 
     let last_id = insert_result.last_insert_id();
 
@@ -360,8 +351,7 @@ INSERT INTO tbl_duration_task (
     .bind(start_time)
     .bind(end_time)
     .execute(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)?;
+    .await?;
 
     Ok(())
 }
@@ -400,8 +390,7 @@ INSERT INTO tbl_task (
     .bind(status)
     .bind(category_id)
     .execute(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)?;
+    .await?;
 
     let last_id = insert_result.last_insert_id();
 
@@ -415,8 +404,7 @@ INSERT INTO tbl_reminder_task (
     .bind(last_id)
     .bind(remind_time)
     .execute(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)?;
+    .await?;
 
     Ok(())
 }
@@ -435,8 +423,7 @@ INSERT INTO tbl_tag (
     )
     .bind(tag_name)
     .execute(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)?;
+    .await?;
 
     Ok(())
 }
@@ -461,8 +448,306 @@ INSERT INTO tbl_category (
     .bind(category_name)
     .bind(category_description)
     .execute(&mut *db)
-    .await
-    .map_err(|_| TodoError::InternalServerError)?;
+    .await?;
+
+    Ok(())
+}
+
+#[get("/tag?<id>")]
+async fn delete_tag(mut db: Connection<Db>, id: TagID) -> Result<(), TodoError> {
+    let mut tx = db.begin().await?;
+
+    let _delete_task_tag_result = sqlx::query(
+        "
+DELETE FROM tbl_task_tag WHERE tag_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    let _delete_tag_result = sqlx::query(
+        "
+DELETE FROM tbl_tag WHERE tag_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(())
+}
+
+#[get("/category?<id>")]
+async fn delete_category(mut db: Connection<Db>, id: CategoryID) -> Result<(), TodoError> {
+    let mut tx = db.begin().await?;
+
+    let _set_category_null_result = sqlx::query(
+        "
+UPDATE tbl_task SET category_id = NULL WHERE category_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    let _delete_category_result = sqlx::query(
+        "
+DELETE FROM tbl_category WHERE category_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(())
+}
+
+#[get("/reminder-task?<id>")]
+async fn delete_reminder_task(mut db: Connection<Db>, id: TaskID) -> Result<(), TodoError> {
+    let mut tx = db.begin().await?;
+
+    let _delete_reminder_result = sqlx::query(
+        "
+DELETE FROM tbl_reminder_task WHERE task_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    let _delete_task_tag_result = sqlx::query(
+        "
+DELETE FROM tbl_task_tag WHERE task_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    let _delete_task_result = sqlx::query(
+        "
+DELETE FROM tbl_task WHERE task_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(())
+}
+
+#[get("/duration-task?<id>")]
+async fn delete_duration_task(mut db: Connection<Db>, id: TaskID) -> Result<(), TodoError> {
+    let mut tx = db.begin().await?;
+
+    let _delete_duration_result = sqlx::query(
+        "
+DELETE FROM tbl_duration_task WHERE task_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    let _delete_task_tag_result = sqlx::query(
+        "
+DELETE FROM tbl_task_tag WHERE task_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    let _delete_task_result = sqlx::query(
+        "
+DELETE FROM tbl_task WHERE task_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(())
+}
+
+#[get("/common-task?<id>")]
+async fn delete_common_task(mut db: Connection<Db>, id: TaskID) -> Result<(), TodoError> {
+    let mut tx = db.begin().await?;
+
+    let _delete_task_tag_result = sqlx::query(
+        "
+DELETE FROM tbl_task_tag WHERE task_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    let _delete_task_result = sqlx::query(
+        "
+DELETE FROM tbl_task WHERE task_id = ?",
+    )
+    .bind(id)
+    .execute(&mut tx)
+    .await?;
+
+    tx.commit().await?;
+
+    Ok(())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct ConversionToCommonTask {
+    id: TaskID,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct UpdateDurationTask {
+    id: TaskID,
+    start_time: DateTime<Utc>,
+    end_time: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct UpdateReminderTask {
+    id: TaskID,
+    remind_time: DateTime<Utc>,
+}
+
+#[post("/to-common-task", data = "<conversion>")]
+async fn convert_to_common_task(
+    mut db: Connection<Db>,
+    conversion: Json<ConversionToCommonTask>,
+) -> Result<(), TodoError> {
+    let _result = sqlx::query(
+        "
+CALL to_common_task(?)",
+    )
+    .bind(conversion.id)
+    .execute(&mut *db)
+    .await?;
+
+    Ok(())
+}
+
+#[post("/to-duration-task", data = "<conversion>")]
+async fn convert_to_duration_task(
+    mut db: Connection<Db>,
+    conversion: Json<UpdateDurationTask>,
+) -> Result<(), TodoError> {
+    let _result = sqlx::query(
+        "
+CALL to_duration(?, ?, ?)",
+    )
+    .bind(conversion.id)
+    .bind(conversion.start_time)
+    .bind(conversion.end_time)
+    .execute(&mut *db)
+    .await?;
+
+    Ok(())
+}
+
+#[post("/to-reminder-task", data = "<conversion>")]
+async fn convert_to_reminder_task(
+    mut db: Connection<Db>,
+    conversion: Json<UpdateReminderTask>,
+) -> Result<(), TodoError> {
+    let _result = sqlx::query(
+        "
+CALL to_reminder(?, ?)",
+    )
+    .bind(conversion.id)
+    .bind(conversion.remind_time)
+    .execute(&mut *db)
+    .await?;
+
+    Ok(())
+}
+
+#[post("/update-reminder-task", data = "<update>")]
+async fn update_reminder_task(
+    mut db: Connection<Db>,
+    update: Json<UpdateReminderTask>,
+) -> Result<(), TodoError> {
+    let _result = sqlx::query(
+        "
+CALL update_reminder(?, ?)",
+    )
+    .bind(update.id)
+    .bind(update.remind_time)
+    .execute(&mut *db)
+    .await?;
+
+    Ok(())
+}
+
+#[post("/update-duration-task", data = "<update>")]
+async fn update_duration_task(
+    mut db: Connection<Db>,
+    update: Json<UpdateDurationTask>,
+) -> Result<(), TodoError> {
+    let _result = sqlx::query(
+        "
+CALL update_duration(?, ?, ?)",
+    )
+    .bind(update.id)
+    .bind(update.start_time)
+    .bind(update.end_time)
+    .execute(&mut *db)
+    .await?;
+
+    Ok(())
+}
+
+#[post("/update-common-task", data = "<update>")]
+async fn update_common_task(
+    mut db: Connection<Db>,
+    update: Json<CommonTask>,
+) -> Result<(), TodoError> {
+    let _result = sqlx::query(
+        "
+CALL update_common(?, ?, ?, ?, ?, ?, ?)",
+    )
+    .bind(update.id)
+    .bind(update.title.clone())
+    .bind(update.description.clone())
+    .bind(update.deadline)
+    .bind(update.priority)
+    .bind(update.status.clone())
+    .bind(update.category_id)
+    .execute(&mut *db)
+    .await?;
+
+    Ok(())
+}
+
+#[post("/add-task-tag", data = "<addition>")]
+async fn add_task_tag(mut db: Connection<Db>, addition: Json<TaskTag>) -> Result<(), TodoError> {
+    let _result = sqlx::query(
+        "
+CALL add_task_tag(?, ?)",
+    )
+    .bind(addition.task_id)
+    .bind(addition.tag_id)
+    .execute(&mut *db)
+    .await?;
+
+    Ok(())
+}
+
+#[get("/task-tag?<task_id>&<tag_id>")]
+async fn delete_task_tag(
+    mut db: Connection<Db>,
+    task_id: TaskID,
+    tag_id: TagID,
+) -> Result<(), TodoError> {
+    let _result = sqlx::query(
+        "
+DELETE FROM tbl_task_tag WHERE task_id = ? AND tag_id = ?",
+    )
+    .bind(task_id)
+    .bind(tag_id)
+    .execute(&mut *db)
+    .await?;
 
     Ok(())
 }
@@ -492,6 +777,29 @@ async fn main() -> anyhow::Result<()> {
                 fetch_common_task,
                 fetch_duration_task,
                 fetch_reminder_task,
+            ],
+        )
+        .mount(
+            "/delete",
+            routes![
+                delete_tag,
+                delete_category,
+                delete_reminder_task,
+                delete_duration_task,
+                delete_common_task,
+                delete_task_tag,
+            ],
+        )
+        .mount(
+            "/update",
+            routes![
+                convert_to_common_task,
+                convert_to_duration_task,
+                convert_to_reminder_task,
+                update_duration_task,
+                update_reminder_task,
+                update_common_task,
+                add_task_tag
             ],
         )
         .launch()

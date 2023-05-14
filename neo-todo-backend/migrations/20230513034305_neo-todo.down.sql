@@ -14,6 +14,24 @@ ALTER TABLE
 ALTER TABLE
     tbl_task_tag DROP FOREIGN KEY fk_task_tag_2;
 
+DROP PROCEDURE to_common;
+
+DROP PROCEDURE to_duration;
+
+DROP PROCEDURE to_reminder;
+
+DROP PROCEDURE update_duration;
+
+DROP PROCEDURE update_reminder;
+
+DROP PROCEDURE update_common;
+
+DROP PROCEDURE add_task_tag;
+
+DROP VIEW v_duration_task;
+
+DROP VIEW v_reminder_task;
+
 DROP TABLE tbl_category;
 
 DROP TABLE tbl_duration_task;

@@ -67,24 +67,181 @@ ALTER TABLE
 ADD
     CONSTRAINT fk_task_tag_2 FOREIGN KEY (tag_id) REFERENCES tbl_tag (tag_id);
 
-CREATE TRIGGER trg_category_delete
-BEFORE
-    DELETE ON tbl_category FOR EACH ROW BEGIN
-UPDATE
-    tbl_task
-SET
-    category_id = NULL
-WHERE
-    category_id = OLD.category_id;
+CREATE VIEW v_duration_task AS
+SELECT
+    *
+FROM
+    tbl_task NATURAL
+    JOIN tbl_duration_task;
 
+CREATE VIEW v_reminder_task AS
+SELECT
+    *
+FROM
+    tbl_task NATURAL
+    JOIN tbl_reminder_task;
+
+-- Convertion to common task
+CREATE PROCEDURE to_common(IN in_task_id INT)
+BEGIN
+    DECLARE exit handler for sqlexception
+    BEGIN
+        -- ERROR occurred, rollback
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+    
+    DELETE FROM tbl_duration_task WHERE task_id = in_task_id;
+    DELETE FROM tbl_reminder_task WHERE task_id = in_task_id;
+
+    COMMIT;
 END;
 
-CREATE TRIGGER trg_tag_delete
-BEFORE
-    DELETE ON tbl_tag FOR EACH ROW BEGIN
-DELETE FROM
-    tbl_task_tag
-WHERE
-    tag_id = OLD.tag_id;
 
+-- Converting to duration task
+CREATE PROCEDURE to_duration(
+    IN in_task_id INT UNSIGNED, IN in_start_time TIMESTAMP, IN in_end_time TIMESTAMP
+) BEGIN
+    DECLARE exit handler for sqlexception
+    BEGIN
+        -- ERROR occurred, rollback
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    -- overwrite
+    DELETE FROM tbl_duration_task WHERE task_id = in_task_id;
+    DELETE FROM tbl_reminder_task WHERE task_id = in_task_id;
+    
+    INSERT INTO tbl_duration_task(task_id, start_time, end_time) 
+    VALUES (in_task_id, in_start_time, in_end_time);
+
+    COMMIT;
 END;
+
+-- Converting to reminder task
+CREATE PROCEDURE to_reminder(
+    IN in_task_id INT UNSIGNED, IN in_remind_time TIMESTAMP
+) BEGIN
+    DECLARE exit handler for sqlexception
+    BEGIN
+        -- ERROR occurred, rollback
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+    -- overwrite
+    DELETE FROM tbl_duration_task WHERE task_id = in_task_id;
+    DELETE FROM tbl_reminder_task WHERE task_id = in_task_id;
+    
+    INSERT INTO tbl_reminder_task(task_id, remind_time) VALUES(in_task_id, in_remind_time);
+
+    COMMIT;
+END;
+
+-- Update duration start/end time
+CREATE PROCEDURE update_duration(
+    IN in_task_id INT UNSIGNED, IN in_start_time TIMESTAMP, IN in_end_time TIMESTAMP
+) BEGIN
+    DECLARE exit handler for sqlexception
+    BEGIN
+        -- ERROR occurred, rollback
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS (SELECT * FROM tbl_duration_task WHERE task_id = in_task_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Task ID not found in tbl_duration_task';
+    END IF;
+    
+    UPDATE tbl_duration_task SET start_time = in_start_time, end_time = in_end_time WHERE task_id = in_task_id;
+
+    COMMIT;
+END;
+
+-- update reminder time
+CREATE PROCEDURE update_reminder(
+    IN in_task_id INT UNSIGNED, IN in_remind_time TIMESTAMP
+) BEGIN
+    DECLARE exit handler for sqlexception
+    BEGIN
+        -- ERROR occurred, rollback
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS (SELECT * FROM tbl_reminder_task WHERE task_id = in_task_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Task ID not found in tbl_reminder_task';
+    END IF;
+    
+    UPDATE tbl_reminder_task SET remind_time = in_remind_time WHERE task_id = in_task_id;
+
+    COMMIT;
+END;
+
+CREATE PROCEDURE update_common(
+    IN in_task_id INT UNSIGNED,
+    IN in_task_title VARCHAR(255),
+    IN in_task_description TEXT,
+    IN in_task_deadline TIMESTAMP,
+    IN in_task_priority INT UNSIGNED,
+    IN in_task_status TEXT,
+    IN in_category_id INT UNSIGNED
+) BEGIN
+
+    DECLARE exit handler for sqlexception
+    BEGIN
+        -- ERROR occurred, rollback
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS (SELECT * FROM tbl_task WHERE task_id = in_task_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Task ID not found in tbl_task';
+    END IF;
+    
+    UPDATE tbl_task SET
+        task_title = in_task_title,
+        task_description = in_task_description,
+        task_deadline = in_task_deadline,
+        task_priority = in_task_priority,
+        task_status = in_task_status,
+        category_id = in_category_id
+    WHERE task_id = in_task_id;
+
+    COMMIT;
+END;
+
+CREATE PROCEDURE add_task_tag(
+    IN in_task_id INT UNSIGNED, IN in_tag_id INT UNSIGNED
+) BEGIN
+    DECLARE exit handler for sqlexception
+    BEGIN
+        -- ERROR occurred, rollback
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    IF NOT EXISTS (SELECT * FROM tbl_task WHERE task_id = in_task_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Task ID not found in tbl_task';
+    END IF;
+
+    IF NOT EXISTS (SELECT * FROM tbl_tag WHERE tag_id = in_tag_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Tag ID not found in tbl_tag';
+    END IF;
+
+    IF EXISTS (SELECT * FROM tbl_task_tag WHERE task_id = in_task_id AND tag_id = in_tag_id) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Task ID and Tag ID already exists in tbl_task_tag';
+    END IF;
+
+    INSERT INTO tbl_task_tag(task_id, tag_id) VALUES(in_task_id, in_tag_id);
+
+    COMMIT;
+END;
+
