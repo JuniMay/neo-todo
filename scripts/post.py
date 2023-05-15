@@ -33,6 +33,8 @@ common_task_data = {
     'deadline': "2023-5-14T23:11:35Z",
     'status': "DOING",
     'category_id': None,
+    
+    'kind': 0,
 }
 
 tag_data = {
@@ -89,6 +91,7 @@ common_task_data = {
     'deadline': "2023-5-14T23:11:35Z",
     'status': "DOING",
     'category_id': 1,
+    'kind': 0,
 }
 
 r = requests.post(url=f'{create_url}/duration-task', json=duration_task_data)

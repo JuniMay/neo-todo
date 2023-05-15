@@ -75,15 +75,18 @@ CREATE VIEW v_duration_task AS
 SELECT
     *
 FROM
-    tbl_task NATURAL
-    JOIN tbl_duration_task;
+    tbl_task NATURAL JOIN tbl_duration_task;
 
 CREATE VIEW v_reminder_task AS
 SELECT
     *
 FROM
-    tbl_task NATURAL
-    JOIN tbl_reminder_task;
+    tbl_task NATURAL JOIN tbl_reminder_task;
+
+CREATE VIEW v_task_tag AS
+SELECT
+    *
+FROM tbl_task_tag NATURAL JOIN tbl_tag;
 
 -- Convertion to common task
 CREATE PROCEDURE to_common(IN in_task_id INT)

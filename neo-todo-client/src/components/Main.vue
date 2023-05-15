@@ -39,7 +39,7 @@ const selectedTask = ref<CommonTask>();
 const currDialogKind = ref(DialogKind.None);
 const isDialogOpen = ref(false);
 
-async function fetch_common_tasks() {
+async function fetchCommonTasks() {
   const client = await getClient();
   const response = await client.request({
     method: 'GET',
@@ -82,7 +82,7 @@ async function saveTask() {
   }
   currDialogKind.value = DialogKind.None;
   isDialogOpen.value = false;
-  fetch_common_tasks();
+  fetchCommonTasks();
 }
 
 function getKind(kind: number) {
@@ -106,7 +106,7 @@ function getKind(kind: number) {
       <v-toolbar-title> NEO TODO</v-toolbar-title>
       <v-toolbar-subtitle>NKU Education Oriented TODO Application</v-toolbar-subtitle>
       <v-spacer></v-spacer>
-      <v-btn class="ma-2" @click="fetch_common_tasks()" icon="mdi-sync"></v-btn>
+      <v-btn class="ma-2" @click="fetchCommonTasks()" icon="mdi-sync"></v-btn>
       <v-btn class="ma-2" @click="openAddDialog()" icon="mdi-plus"></v-btn>
     </v-toolbar>
 

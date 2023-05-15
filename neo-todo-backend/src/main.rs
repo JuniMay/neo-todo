@@ -88,6 +88,86 @@ SELECT * FROM tbl_task",
     Ok(Json(result))
 }
 
+#[get("/all-tags")]
+async fn fetch_all_tags(mut db: Connection<Db>) -> Result<Json<Vec<Tag>>, TodoError> {
+    let result = sqlx::query(
+        "
+SELECT * FROM tbl_tag",
+    )
+    .fetch_all(&mut *db)
+    .await?
+    .into_iter()
+    .map(|row| Tag {
+        id: row.get(0),
+        name: row.get(1),
+    })
+    .collect();
+
+    Ok(Json(result))
+}
+
+#[get("/tags?<task_id>")]
+async fn fetch_tags(mut db: Connection<Db>, task_id: TaskID) -> Result<Json<Vec<Tag>>, TodoError> {
+    let result = sqlx::query(
+        "
+SELECT tag_id, tag_name FROM v_task_tag WHERE task_id = ?",
+    )
+    .bind(task_id)
+    .fetch_all(&mut *db)
+    .await?
+    .into_iter()
+    .map(|row| Tag {
+        id: row.get(0),
+        name: row.get(1),
+    })
+    .collect();
+
+    Ok(Json(result))
+}
+
+#[get("/all-categories")]
+async fn fetch_all_categories(mut db: Connection<Db>) -> Result<Json<Vec<Category>>, TodoError> {
+    let result = sqlx::query(
+        "
+SELECT * FROM tbl_category",
+    )
+    .fetch_all(&mut *db)
+    .await?
+    .into_iter()
+    .map(|row| Category {
+        id: row.get(0),
+        name: row.get(1),
+        description: row.get(2),
+    })
+    .collect();
+
+    Ok(Json(result))
+}
+
+#[get("/category?<id>")]
+async fn fetch_category(
+    mut db: Connection<Db>,
+    id: CategoryID,
+) -> Result<Json<Category>, TodoError> {
+    let result = sqlx::query(
+        "
+SELECT * FROM tbl_category WHERE category_id = ?",
+    )
+    .bind(id)
+    .fetch_one(&mut *db)
+    .await
+    .map_err(|_| TodoError::NotFound)
+    .map(|row| {
+        Json(Category {
+            id: row.get(0),
+            name: row.get(1),
+            description: row.get(2),
+        })
+    });
+
+    result
+}
+
 #[get("/common-task?<id>")]
 async fn fetch_common_task(
     mut db: Connection<Db>,
@@ -775,6 +855,10 @@ async fn main() -> anyhow::Result<()> {
                 fetch_common_task,
                 fetch_duration_task,
                 fetch_reminder_task,
+                fetch_all_tags,
+                fetch_tags,
+                fetch_all_categories,
+                fetch_category,
             ],
         )
         .mount(

@@ -32,6 +32,8 @@ DROP VIEW v_duration_task;
 
 DROP VIEW v_reminder_task;
 
+DROP VIEW v_task_tag;
+
 DROP TABLE tbl_category;
 
 DROP TABLE tbl_duration_task;
