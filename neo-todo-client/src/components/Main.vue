@@ -3,15 +3,8 @@ import { ref } from "vue";
 import { getClient } from "@tauri-apps/api/http";
 import axios from 'axios';
 
-interface Task {
-  id: number,
-  title: string,
-  description?: string,
-  deadline?: string,
-  priority?: number,
-  status?: string,
-  category_id?: number,
-}
+import TaskItem from "./TaskItem.vue";
+
 
 interface CommonTask {
   id: number,
@@ -102,27 +95,17 @@ function getKind(kind: number) {
 
 <template>
   <v-card rounded="0">
-    <v-toolbar color="black">
-      <v-toolbar-title> NEO TODO</v-toolbar-title>
-      <v-toolbar-subtitle>NKU Education Oriented TODO Application</v-toolbar-subtitle>
+    <v-toolbar color="#711a5f">
+      <v-toolbar-title style="color: white;">NEO TODO</v-toolbar-title>
+      <v-toolbar-subtitle style="color: white;">NKU Education Oriented TODO Application</v-toolbar-subtitle>
       <v-spacer></v-spacer>
-      <v-btn class="ma-2" @click="fetchCommonTasks()" icon="mdi-sync"></v-btn>
-      <v-btn class="ma-2" @click="openAddDialog()" icon="mdi-plus"></v-btn>
+      <v-btn class="ma-2" @click="fetchCommonTasks()" icon="mdi-sync" style="color: white;"></v-btn>
+      <v-btn class="ma-2" @click="openAddDialog()" icon="mdi-plus" style="color: white;"></v-btn>
     </v-toolbar>
 
-    <v-list v-for="(task, index) in tasks" :key="index">
-      <v-list-item @click="openEditDialog(task)">
-        <v-row>
-          <v-col>
-            <v-list-item-title>{{ task.title }}</v-list-item-title>
-            <v-list-item-subtitle class="mb-2">{{ task.description }}</v-list-item-subtitle>
-            <v-chip>{{ task.status }}</v-chip>
-            <v-list-item-subtitle>{{ getKind(task.kind) }}, Priority: {{ task.priority }}</v-list-item-subtitle>
-            <v-list-item-subtitle>{{ (new Date(task.deadline as string)) }}</v-list-item-subtitle>
-          </v-col>
-        </v-row>
-      </v-list-item>
-    </v-list>
+    <v-expansion-panels v-for="(task, index) in tasks" :key="index">
+      <task-item :task="task" />
+    </v-expansion-panels>
 
     <v-dialog v-model="isDialogOpen" max-width="500px" v-if="selectedTask">
       <v-card>
@@ -139,12 +122,10 @@ function getKind(kind: number) {
                 <v-row>
 
                   <v-col>
-                    <v-text-field type="date" v-model="selectedTask.deadline"
-                      label="Deadline"></v-text-field>
+                    <v-text-field type="date" v-model="selectedTask.deadline" label="Deadline"></v-text-field>
                   </v-col>
                   <v-col>
-                    <v-text-field type="time" v-model="selectedTask.deadline"
-                      label="Deadline"></v-text-field>
+                    <v-text-field type="time" v-model="selectedTask.deadline" label="Deadline"></v-text-field>
                   </v-col>
                 </v-row>
                 <v-text-field type="number" v-model="selectedTask.priority" label="Priority"></v-text-field>
