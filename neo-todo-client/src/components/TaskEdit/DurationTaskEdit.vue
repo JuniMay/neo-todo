@@ -83,9 +83,6 @@ export default defineComponent({
 </script>
 
 <template>
-  <v-row>
-    <v-col></v-col>
-  </v-row>
   <v-row dense>
     <v-col cols="2">
       <v-text-field type="string" v-model="status" label="Status"></v-text-field>
@@ -127,4 +124,5 @@ export default defineComponent({
       @click="async () => { await deleteDurationTask(id); await updateCallback(); }">Delete</v-btn>
 
   </v-row>
-  <v-row></v-row></template>
+  <v-row></v-row>
+</template>

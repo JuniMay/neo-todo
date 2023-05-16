@@ -59,21 +59,18 @@ export default defineComponent({
 </script>
 
 <template>
-  <v-row>
-    <v-col></v-col>
-  </v-row>
   <v-row dense>
     <v-col cols="2">
       <v-text-field type="string" v-model="status" label="Status"></v-text-field>
     </v-col>
     <v-col>
-      <v-text-field type="string" v-model="title" label="Deadline"></v-text-field>
+      <v-text-field type="string" v-model="title" label="Title"></v-text-field>
     </v-col>
   </v-row>
 
   <v-row dense>
     <v-col>
-      <v-text-field type="string" v-model="deadline" label="Title"></v-text-field>
+      <v-text-field type="string" v-model="deadline" label="Deadline"></v-text-field>
     </v-col>
   </v-row>
 
@@ -99,4 +96,5 @@ export default defineComponent({
       @click="async () => { await deleteCommonTask(id); await updateCallback(); }">Delete</v-btn>
 
   </v-row>
-  <v-row></v-row></template>
+  <v-row></v-row>
+</template>

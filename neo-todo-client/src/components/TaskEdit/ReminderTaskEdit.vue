@@ -76,9 +76,6 @@ export default defineComponent({
 </script>
 
 <template>
-  <v-row>
-    <v-col></v-col>
-  </v-row>
   <v-row dense>
     <v-col cols="2">
       <v-text-field type="string" v-model="status" label="Status"></v-text-field>
@@ -104,12 +101,12 @@ export default defineComponent({
     <v-btn prepend-icon="mdi-cancel" elevation="0">Cancel</v-btn>
     <v-btn prepend-icon="mdi-content-save" elevation="0" @click="async () => { await save(); }">Save</v-btn>
     <v-btn elevation="0"
-        @click="async () => { await convertToCommonTask(task as ReminderTask); await updateCallback(); }">
+      @click="async () => { await convertToCommonTask(task as ReminderTask); await updateCallback(); }">
       <v-icon :icon="taskIcon(0)" start></v-icon>
       Common Task
     </v-btn>
     <v-btn elevation="0"
-        @click="async () => { await convertToDurationTask(task as ReminderTask); await updateCallback(); }">
+      @click="async () => { await convertToDurationTask(task as ReminderTask); await updateCallback(); }">
       <v-icon :icon="taskIcon(1)" start></v-icon>
       Duration Task
     </v-btn>
@@ -117,4 +114,5 @@ export default defineComponent({
       @click="async () => { await deleteReminderTask(id); await updateCallback(); }">Delete</v-btn>
 
   </v-row>
-  <v-row></v-row></template>
+  <v-row></v-row>
+</template>

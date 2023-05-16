@@ -4,7 +4,7 @@ import { defineComponent, ref } from 'vue';
 import { taskKind, taskIcon, Tag } from '../utils';
 import TaskEdit from './TaskEdit.vue';
 
-import { fetchDurationTask, fetchReminderTask, fetchTags, fetchAllTags } from '../utils';
+import { fetchDurationTask, fetchReminderTask, fetchTags, fetchAllTags, addTaskTag, deleteTaskTag } from '../utils';
 
 export default defineComponent({
   name: 'TodoItem',
@@ -31,16 +31,48 @@ export default defineComponent({
 
     patchTask();
 
-    // const tags = ref(fetchTags(id.value));
+    const tags = ref([] as Tag[]);
 
-    const tags = ref<Array<Tag>>([]);
+    const task_tags = ref([] as Tag[])
+    let prev_task_tags = [] as Tag[];
 
-    (async () => {
+    async function loadTags() {
       tags.value = await fetchAllTags();
-    })();
+      task_tags.value = await fetchTags(id.value);
+      prev_task_tags = task_tags.value.slice();
+    }
+
+    loadTags();
+
+    const tag_search = ref("");
 
     console.log(task);
     console.log(tags);
+
+    async function updateTaskTags() {
+      console.log("task_tags", task_tags);
+      console.log("prev_task_tags", prev_task_tags);
+
+      let add_diff_tags = task_tags.value.filter(tag =>
+        prev_task_tags.some(prev_tag => tag.id === prev_tag.id) === false
+      );
+
+      let sub_diff_tags = prev_task_tags.filter(prev_tag =>
+        task_tags.value.some(tag => prev_tag.id === tag.id) === false
+      );
+
+      console.log("add_diff_tags", add_diff_tags);
+      console.log("sub_diff_tags", sub_diff_tags);
+
+      for (let i = 0; i < add_diff_tags.length; i++) {
+        await addTaskTag(id.value, add_diff_tags[i].id);
+      }
+      for (let i = 0; i < sub_diff_tags.length; i++) {
+        await deleteTaskTag(id.value, sub_diff_tags[i].id);
+      }
+
+      prev_task_tags = task_tags.value.slice();
+    }
 
     return {
       task,
@@ -52,7 +84,10 @@ export default defineComponent({
       deadline,
       taskKind,
       taskIcon,
-      tags
+      tags,
+      task_tags,
+      tag_search,
+      updateTaskTags
     }
   },
   props: {
@@ -72,42 +107,74 @@ export default defineComponent({
   <v-expansion-panel>
     <v-expansion-panel-title>
       <v-row>
-        <v-col cols="3">
-          <v-chip label color="#711a5f">
-            {{ id }}
-          </v-chip>
-          &nbsp;
-          <v-chip label color="#711a5f" style="width: 10.5em;">
-            <v-icon>{{ taskIcon(kind) }}</v-icon>
-            {{ taskKind(kind) }}
-          </v-chip>
+        <v-col cols="4">
+          <v-row dense>
+            <v-col>
+              <!-- <v-chip label color="#711a5f" style="width: 3.5em;"> -->
+              <!-- {{ id }} -->
+              <!-- </v-chip> -->
+              <!-- &nbsp; -->
+              <v-chip label color="#711a5f" style="width: 10.5em;">
+                <v-icon>{{ taskIcon(kind) }}</v-icon>
+                {{ taskKind(kind) }}
+              </v-chip>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <v-chip color="#711a5f">
+                <v-icon>mdi-list-status</v-icon>
+                {{ status }}
+              </v-chip>
+            </v-col>
+          </v-row>
         </v-col>
         <v-col cols="6">
-          <div class="font-weight-bold text-h6">
-            <v-icon color="#711a5f">mdi-checkbox-marked-circle-auto-outline</v-icon>
-            &nbsp;
-            {{ title }}
-          </div>
-        </v-col>
-        <v-col cols="3">
-          <v-chip color="#711a5f">
-            <v-icon>mdi-list-status</v-icon>
-            {{ status }}
-          </v-chip>
+          <v-row dense>
+            <v-col>
+              <div class="font-weight-bold text-h6">
+                <v-icon color="#711a5f">mdi-checkbox-marked-circle-auto-outline</v-icon>
+                &nbsp;
+                {{ title }}
+              </div>
+            </v-col>
+          </v-row>
+          <v-row dense>
+            <v-col>
+              <div class="font-weight-thin text-disabled text-caption">
+                <p class="text-justify">{{ description }}</p>
+              </div>
+            </v-col>
+          </v-row>
         </v-col>
       </v-row>
     </v-expansion-panel-title>
 
     <v-expansion-panel-text>
-      <v-container>
-        <v-row justify="start">
-          <v-col dense v-for="(tag, _) in tags" :key="(tag as Tag).id" cols="auto" class="py-1 pe-0">
-            <v-chip closable>
-              #{{ tag.id }}&nbsp;{{ tag.name }}
-            </v-chip>
-          </v-col>
-        </v-row>
-      </v-container>
+      <v-row>
+        <v-col></v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          <v-combobox v-model="task_tags" v-model:search="tag_search" :items="tags" multiple
+            :item-title="item => '#' + item.id + ' ' + item.name" :hide-no-data="false"
+            @update:model-value="updateTaskTags">
+            <template v-slot:no-data>
+              <v-list-item>
+                <v-list-item-title>
+                  No tags matching "<strong>{{ tag_search }}</strong>". Press <kbd>enter</kbd> to create a new one
+                </v-list-item-title>
+              </v-list-item>
+            </template>
+            <template v-slot:selection="x">
+              <v-chip color="#711a5f">
+                #{{ x.item.raw.id }}&nbsp;{{ x.item.raw.name }}
+              </v-chip>
+            </template>
+          </v-combobox>
+        </v-col>
+      </v-row>
+
       <TaskEdit :task="task" :kind="kind" :update-callback="() => { updateCallback(); }"></TaskEdit>
     </v-expansion-panel-text>
   </v-expansion-panel>
