@@ -1,7 +1,7 @@
 <script lang="ts">
 
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon, deleteCommonTask, CommonTask, updateCommonTask } from '../../utils';
+import { taskKind, taskIcon, deleteCommonTask, CommonTask, updateCommonTask, convertToReminderTask, convertToDurationTask } from '../../utils';
 
 export default defineComponent({
   name: "CommonTaskEdit",
@@ -39,7 +39,9 @@ export default defineComponent({
       taskKind,
       taskIcon,
       deleteCommonTask,
-      save
+      save,
+      convertToReminderTask,
+      convertToDurationTask,
     }
   },
   props: {
@@ -82,29 +84,19 @@ export default defineComponent({
     <v-btn prepend-icon="mdi-cancel" elevation="0">Cancel</v-btn>
     <v-btn prepend-icon="mdi-content-save" elevation="0" @click="async () => { await save(); }">Save</v-btn>
 
-    <v-menu>
-      <template v-slot:activator="{ props }">
-        <v-btn v-bind="props" elevation="0" prepend-icon="mdi-swap-horizontal">
-          Change To
-        </v-btn>
-      </template>
+    <v-btn elevation="0"
+      @click="async () => { await convertToDurationTask(task as CommonTask); await updateCallback(); }">
+      <v-icon :icon="taskIcon(1)" start></v-icon>
+      Duration Task
+    </v-btn>
+    <v-btn elevation="0"
+      @click="async () => { await convertToReminderTask(task as CommonTask); await updateCallback(); }">
+      <v-icon :icon="taskIcon(2)" start></v-icon>
+      Reminder Task
+    </v-btn>
 
-      <v-card>
-        <v-card-text>
-          <v-btn elevation="0">
-            <v-icon :icon="taskIcon(1)" start></v-icon>
-            Duration Task
-          </v-btn>
-          <v-btn elevation="0">
-            <v-icon :icon="taskIcon(2)" start></v-icon>
-            Reminder Task
-          </v-btn>
-        </v-card-text>
-      </v-card>
-    </v-menu>
     <v-btn prepend-icon="mdi-delete" elevation="0"
       @click="async () => { await deleteCommonTask(id); await updateCallback(); }">Delete</v-btn>
 
   </v-row>
-  <v-row></v-row>
-</template>
+  <v-row></v-row></template>

@@ -103,7 +103,7 @@ export default defineComponent({
         <v-row justify="start">
           <v-col dense v-for="(tag, _) in tags" :key="(tag as Tag).id" cols="auto" class="py-1 pe-0">
             <v-chip closable>
-              {{ tag.name }}
+              #{{ tag.id }}&nbsp;{{ tag.name }}
             </v-chip>
           </v-col>
         </v-row>

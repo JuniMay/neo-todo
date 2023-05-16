@@ -697,7 +697,7 @@ async fn convert_to_common_task(
 ) -> Result<(), TodoError> {
     let _result = sqlx::query(
         "
-CALL to_common_task(?)",
+CALL to_common(?)",
     )
     .bind(conversion.id)
     .execute(&mut *db)

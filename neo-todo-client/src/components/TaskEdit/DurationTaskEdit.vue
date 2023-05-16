@@ -1,7 +1,7 @@
 <script lang="ts">
 
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon, deleteDurationTask, DurationTask, updateDurationTask, CommonTask, updateCommonTask } from '../../utils';
+import { taskKind, taskIcon, deleteDurationTask, DurationTask, updateDurationTask, CommonTask, updateCommonTask, convertToCommonTask, convertToReminderTask } from '../../utils';
 import { start } from 'repl';
 
 export default defineComponent({
@@ -62,7 +62,9 @@ export default defineComponent({
       start_time,
       end_time,
       deleteDurationTask,
-      save
+      save,
+      convertToCommonTask,
+      convertToReminderTask
     }
 
   },
@@ -97,7 +99,6 @@ export default defineComponent({
     <v-col>
       <v-text-field type="string" v-model="deadline" label="Deadline"></v-text-field>
     </v-col>
-    <!-- TODO: support edit of end/start time -->
     <v-col>
       <v-text-field type="string" v-model="start_time" label="Start Time"></v-text-field>
     </v-col>
@@ -112,30 +113,18 @@ export default defineComponent({
   <v-row>
     <v-btn prepend-icon="mdi-cancel" elevation="0">Cancel</v-btn>
     <v-btn prepend-icon="mdi-content-save" elevation="0" @click="async () => { await save(); }">Save</v-btn>
-
-    <v-menu>
-      <template v-slot:activator="{ props }">
-        <v-btn v-bind="props" elevation="0" prepend-icon="mdi-swap-horizontal">
-          Change To
-        </v-btn>
-      </template>
-
-      <v-card>
-        <v-card-text>
-          <v-btn elevation="0">
-            <v-icon :icon="taskIcon(0)" start></v-icon>
-            Common Task
-          </v-btn>
-          <v-btn elevation="0">
-            <v-icon :icon="taskIcon(2)" start></v-icon>
-            Reminder Task
-          </v-btn>
-        </v-card-text>
-      </v-card>
-    </v-menu>
+    <v-btn elevation="0"
+      @click="async () => { await convertToCommonTask(task as DurationTask); await updateCallback(); }">
+      <v-icon :icon="taskIcon(0)" start></v-icon>
+      Common Task
+    </v-btn>
+    <v-btn elevation="0"
+      @click="async () => { await convertToReminderTask(task as DurationTask); await updateCallback(); }">
+      <v-icon :icon="taskIcon(2)" start></v-icon>
+      Reminder Task
+    </v-btn>
     <v-btn prepend-icon="mdi-delete" elevation="0"
       @click="async () => { await deleteDurationTask(id); await updateCallback(); }">Delete</v-btn>
 
   </v-row>
-  <v-row></v-row>
-</template>
+  <v-row></v-row></template>

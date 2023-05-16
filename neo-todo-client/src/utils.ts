@@ -1,5 +1,6 @@
 
 import { Body, getClient } from "@tauri-apps/api/http";
+import { Interface } from "readline";
 export const base_url = 'http://127.0.0.1:8000';
 
 const post_headers = {
@@ -68,6 +69,26 @@ export function taskIcon(kind: number): string {
     return 'mdi-alert-box-outline'
   }
   return 'mdi-altimeter'
+}
+
+export async function createNewTask() {
+  const client = await getClient();
+  const request_url = `${base_url}/create/common-task`;
+
+  const data: CommonTask = {
+    id: 0,
+    title: "NEW TASK",
+    kind: 0,
+    status: "TODO",
+    deadline: (new Date()).toISOString(),
+  }
+  
+  const response = await client.request({
+    method: 'POST',
+    url: request_url,
+    body: Body.json(data),
+  });
+  console.log(response);
 }
 
 export async function updateCommonTask(task: CommonTask) {
@@ -192,4 +213,64 @@ export async function fetchTags(task_id: number): Promise<Array<Tag>> {
     url: request_url,
   });
   return response.data as Array<Tag>;
+}
+
+export async function convertToCommonTask(task: DurationTask | ReminderTask | CommonTask) {
+  const client = await getClient();
+  const request_url = `${base_url}/update/to-common-task`;
+  const data = {
+    id: task.id,
+  }
+
+  console.log("convert")
+  console.log(data)
+
+  const response = await client.request({
+    method: 'POST',
+    url: request_url,
+    body: Body.json(data),
+  });
+
+  console.log(response);
+
+}
+export async function convertToDurationTask(task: DurationTask | ReminderTask | CommonTask) {
+  const client = await getClient();
+  const request_url = `${base_url}/update/to-duration-task`;
+  const data = {
+    id: task.id,
+    start_time: task.deadline || (new Date()).toISOString(),
+    end_time: task.deadline || (new Date()).toISOString()
+  }
+
+  console.log("convert")
+  console.log(data)
+
+  const response = await client.request({
+    method: 'POST',
+    url: request_url,
+    body: Body.json(data),
+  });
+
+  console.log(response);
+
+}
+export async function convertToReminderTask(task: DurationTask | ReminderTask | CommonTask) {
+  const client = await getClient();
+  const request_url = `${base_url}/update/to-reminder-task`;
+  const data = {
+    id: task.id,
+    remind_time: task.deadline || (new Date()).toISOString()
+  }
+
+  console.log("convert")
+  console.log(data)
+
+  const response = await client.request({
+    method: 'POST',
+    url: request_url,
+    body: Body.json(data),
+  });
+
+  console.log(response);
 }
