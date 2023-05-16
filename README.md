@@ -35,3 +35,7 @@ Available requests are listed as below:
     - `update-reminder-task`: POST, update the columns in the reminder task table.
     - `update-common-task`: POST, update the columns in the common task table.
     - `add-task-tag`: POST, add task-tag relation by the given json with task and tag id.
+
+## Client
+
+Frontend client is built with tauri + vue.js + vuetify. This is my first frontend application so some implementations are very crappy.
