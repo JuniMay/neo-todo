@@ -1,7 +1,7 @@
 <script lang="ts">
 
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon } from '../../utils';
+import { taskKind, taskIcon, deleteCommonTask } from '../../utils';
 
 export default defineComponent({
   name: "CommonTaskEdit",
@@ -22,12 +22,17 @@ export default defineComponent({
       deadline,
       taskKind,
       taskIcon,
+      deleteCommonTask
     }
 
   },
   props: {
     task: {
       type: Object,
+      required: true,
+    },
+    updateCallback: {
+      type: Function,
       required: true,
     }
   }
@@ -71,12 +76,7 @@ export default defineComponent({
       <v-card>
         <v-card-text>
           <v-btn elevation="0">
-            <v-icon :icon="taskIcon(0)" start></v-icon>
-            Common Task
-          </v-btn>
-          <v-btn elevation="0">
             <v-icon :icon="taskIcon(1)" start></v-icon>
-
             Duration Task
           </v-btn>
           <v-btn elevation="0">
@@ -86,6 +86,7 @@ export default defineComponent({
         </v-card-text>
       </v-card>
     </v-menu>
+    <v-btn prepend-icon="mdi-delete" elevation="0" @click="async () => { await deleteCommonTask(id); await updateCallback(); }">Delete</v-btn>
 
   </v-row>
   <v-row></v-row>

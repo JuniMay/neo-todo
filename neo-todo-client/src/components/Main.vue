@@ -1,95 +1,67 @@
-<script setup lang="ts">
+<script lang="ts">
 import { ref } from "vue";
 import { getClient } from "@tauri-apps/api/http";
 import axios from 'axios';
 
 import TaskItem from "./TaskItem.vue";
+import { CommonTask } from "../utils";
+import { defineComponent } from "vue";
 
 
-interface CommonTask {
-  id: number,
-  title: string,
-  description?: string,
-  deadline?: string,
-  priority?: number,
-  status?: string,
-  category_id?: number,
+export default defineComponent({
+  components: {
+    TaskItem,
+  },
+  setup() {
+    enum DialogKind {
+      Add,
+      Edit,
+      None,
+    }
 
-  kind: number,
-}
+    const base_url = 'http://127.0.0.1:8000';
 
-enum DialogKind {
-  Add,
-  Edit,
-  None,
-}
+    const tasks = ref<CommonTask[]>([]);
+    const selectedTask = ref<CommonTask>();
 
-const base_url = 'http://127.0.0.1:8000';
+    const currDialogKind = ref(DialogKind.None);
+    const isDialogOpen = ref(false);
 
-const tasks = ref<CommonTask[]>([]);
-const selectedTask = ref<CommonTask>();
+    async function fetchCommonTasks() {
 
-const currDialogKind = ref(DialogKind.None);
-const isDialogOpen = ref(false);
+      console.log('fectched');
 
-async function fetchCommonTasks() {
-  const client = await getClient();
-  const response = await client.request({
-    method: 'GET',
-    url: `${base_url}/fetch/all-common-tasks`,
-  });
+      const client = await getClient();
+      const response = await client.request({
+        method: 'GET',
+        url: `${base_url}/fetch/all-common-tasks`,
+      });
 
-  tasks.value = response.data as CommonTask[];
-}
+      tasks.value = response.data as CommonTask[];
+    }
 
-function openEditDialog(task: CommonTask) {
-  selectedTask.value = { ...task };
-  currDialogKind.value = DialogKind.Edit;
-  isDialogOpen.value = true;
-}
+    function openAddDialog() {
+      selectedTask.value = {
+        id: 0,
+        title: "",
+        deadline: Date.now().toString(),
+        kind: 0,
+      };
+      currDialogKind.value = DialogKind.Add;
+      isDialogOpen.value = true;
+    }
 
-function openAddDialog() {
-  selectedTask.value = {
-    id: 0,
-    title: "",
-    deadline: Date.now().toString(),
-    kind: 0,
-  };
-  currDialogKind.value = DialogKind.Add;
-  isDialogOpen.value = true;
-}
-
-async function saveTask() {
-  if (currDialogKind.value == DialogKind.Edit) {
-    axios.post(`${base_url}/update/update-common-task`, JSON.stringify(selectedTask.value), {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
-  } else if (currDialogKind.value == DialogKind.Add) {
-    axios.post(`${base_url}/create/common-task`, JSON.stringify(selectedTask.value), {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    })
+    return {
+      tasks,
+      selectedTask,
+      fetchCommonTasks,
+      openAddDialog,
+      isDialogOpen,
+      currDialogKind,
+      DialogKind,
+    }
   }
-  currDialogKind.value = DialogKind.None;
-  isDialogOpen.value = false;
-  fetchCommonTasks();
-}
-
-function getKind(kind: number) {
-  switch (kind) {
-    case 0:
-      return 'Common';
-    case 1:
-      return 'Duration';
-    case 2:
-      return 'Reminder';
-    default:
-      return '';
-  }
-}
+})
 
 </script>
 
@@ -103,8 +75,8 @@ function getKind(kind: number) {
       <v-btn class="ma-2" @click="openAddDialog()" icon="mdi-plus" style="color: white;"></v-btn>
     </v-toolbar>
 
-    <v-expansion-panels v-for="(task, index) in tasks" :key="index">
-      <task-item :task="task" />
+    <v-expansion-panels v-for="(task, _) in tasks" :key="(task as CommonTask).id">
+      <task-item :task="task" :update-callback="() => { fetchCommonTasks(); }" />
     </v-expansion-panels>
 
     <v-dialog v-model="isDialogOpen" max-width="500px" v-if="selectedTask">
@@ -118,9 +90,7 @@ function getKind(kind: number) {
               <v-col>
                 <v-text-field v-model="selectedTask.title" label="Title"></v-text-field>
                 <v-text-field v-model="selectedTask.description" label="Description"></v-text-field>
-
                 <v-row>
-
                   <v-col>
                     <v-text-field type="date" v-model="selectedTask.deadline" label="Deadline"></v-text-field>
                   </v-col>
@@ -138,7 +108,7 @@ function getKind(kind: number) {
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text="Close"
             @click="currDialogKind = DialogKind.None; isDialogOpen = false"></v-btn>
-          <v-btn color="blue darken-1" text="Save" @click="saveTask()">Save</v-btn>
+          <v-btn color="blue darken-1" text="Save">Save</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

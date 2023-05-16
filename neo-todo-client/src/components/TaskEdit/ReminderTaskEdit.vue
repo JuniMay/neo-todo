@@ -1,10 +1,10 @@
 <script lang="ts">
 
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon } from '../../utils';
+import { taskKind, taskIcon, deleteReminderTask } from '../../utils';
 
 export default defineComponent({
-  name: "DurationTaskEdit",
+  name: "ReminderTaskEdit",
   setup(props) {
     const id = ref(props.task.id);
     const title = ref(props.task.title);
@@ -12,6 +12,8 @@ export default defineComponent({
     const kind = ref(props.task.kind);
     const status = ref(props.task.status);
     const deadline = ref(props.task.deadline);
+
+    const remind_time = ref(props.task.remind_time);
 
     return {
       id,
@@ -22,12 +24,18 @@ export default defineComponent({
       deadline,
       taskKind,
       taskIcon,
+      remind_time,
+      deleteReminderTask
     }
 
   },
   props: {
     task: {
       type: Object,
+      required: true,
+    },
+    updateCallback: {
+      type: Function,
       required: true,
     }
   }
@@ -52,12 +60,8 @@ export default defineComponent({
     <v-col>
       <v-text-field type="string" v-model="deadline" label="Deadline"></v-text-field>
     </v-col>
-    <!-- TODO: support edit of end/start time -->
     <v-col>
-      <v-text-field type="string" v-model="deadline" label="Start Time"></v-text-field>
-    </v-col>
-    <v-col>
-      <v-text-field type="string" v-model="deadline" label="End Time"></v-text-field>
+      <v-text-field type="string" v-model="remind_time" label="Remind Time"></v-text-field>
     </v-col>
   </v-row>
 
@@ -83,16 +87,14 @@ export default defineComponent({
           </v-btn>
           <v-btn elevation="0">
             <v-icon :icon="taskIcon(1)" start></v-icon>
-
             Duration Task
-          </v-btn>
-          <v-btn elevation="0">
-            <v-icon :icon="taskIcon(2)" start></v-icon>
-            Reminder Task
           </v-btn>
         </v-card-text>
       </v-card>
     </v-menu>
+
+    <v-btn prepend-icon="mdi-delete" elevation="0"
+      @click="async () => { await deleteReminderTask(id); await updateCallback(); }">Delete</v-btn>
 
   </v-row>
   <v-row></v-row>

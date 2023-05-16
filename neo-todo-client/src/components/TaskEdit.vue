@@ -2,45 +2,49 @@
 
 
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon } from '../utils';
-import Common from './TaskEdit/Common.vue';
-import Duration from './TaskEdit/Duration.vue'
-import Reminder from './TaskEdit/Reminder.vue'
+import CommonTaskEdit from './TaskEdit/CommonTaskEdit.vue';
+import DurationTaskEdit from './TaskEdit/DurationTaskEdit.vue'
+import ReminderTaskEdit from './TaskEdit/ReminderTaskEdit.vue'
 
 export default defineComponent({
-    name: "TaskEdit",
-    components: {
-        Common,
-        Duration,
-        Reminder
-    },
-    setup(props) {
-        const task = props.task;
-        const kind = ref(props.task.kind);
+  name: "TaskEdit",
+  components: {
+    CommonTaskEdit,
+    DurationTaskEdit,
+    ReminderTaskEdit
+  },
+  setup() {
 
-        return {
-            task,
-            kind
-        }
+  },
+  props: {
+    task: {
+      type: Object,
+      required: true
     },
-    props: {
-        task: {
-            type: Object,
-            required: true
-        }
+    kind: {
+      type: Number,
+      required: true
+    },
+    updateCallback: {
+      type: Function,
+      required: true
     }
+  }
 })
 
 </script>
 
 <template>
-    <template v-if="kind === 0">
-        <Common :task="task"></Common>
-    </template>
-    <template v-else-if="kind === 1">
-        <Duration :task="task"></Duration>
-    </template>
-    <template v-else>
-        <Reminder :task="task"></Reminder>
-    </template>
+  <template v-if="kind === 0">
+    <CommonTaskEdit :task="task" :update-callback="() => { updateCallback(); }"></CommonTaskEdit>
+  </template>
+  <template v-else-if="kind === 1">
+    <DurationTaskEdit :task="task" :update-callback="() => { updateCallback(); }"></DurationTaskEdit>
+  </template>
+  <template v-else-if="kind === 2">
+    <ReminderTaskEdit :task="task" :update-callback="() => { updateCallback(); }"></ReminderTaskEdit>
+  </template>
+  <template v-else>
+    <CommonTaskEdit :task="task" :update-callback="() => { updateCallback(); }"></CommonTaskEdit>
+  </template>
 </template>
