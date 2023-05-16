@@ -5,7 +5,7 @@ import axios from 'axios';
 
 import TaskItem from "./TaskItem.vue";
 import TagEdit from "./TagEdit.vue";
-import { CommonTask, createNewTask } from "../utils";
+import { CommonTask, createNewTask, fetchAllCommonTasks } from "../utils";
 import { defineComponent } from "vue";
 
 
@@ -15,34 +15,23 @@ export default defineComponent({
     TagEdit
   },
   setup() {
-    const base_url = 'http://127.0.0.1:8000';
-
     const tasks = ref([] as CommonTask[]);
     const selectedTask = ref<CommonTask>();
 
 
-    async function fetchCommonTasks() {
-
-      console.log('fectched');
-
-      const client = await getClient();
-      const response = await client.request({
-        method: 'GET',
-        url: `${base_url}/fetch/all-common-tasks`,
-      });
-
-      tasks.value = response.data as CommonTask[];
+    async function fetch() {
+      tasks.value = await fetchAllCommonTasks();
       console.log(tasks)
     }
 
     const navPage = ref("pg_tasks");
 
-    fetchCommonTasks();
-
+    fetch();
+    
     return {
       tasks,
       selectedTask,
-      fetchCommonTasks,
+      fetch,
       createNewTask,
       navPage,
     }
@@ -58,13 +47,13 @@ export default defineComponent({
       <v-toolbar color="#711a5f">
         <v-toolbar-title style="color: white;">NEO TODO</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn class="ma-2" @click="fetchCommonTasks()" icon="mdi-sync" style="color: white;"></v-btn>
-        <v-btn class="ma-2" @click="async () => { await createNewTask(); await fetchCommonTasks(); }" icon="mdi-plus"
+        <v-btn class="ma-2" @click="fetch()" icon="mdi-sync" style="color: white;"></v-btn>
+        <v-btn class="ma-2" @click="async () => { await createNewTask(); await fetch(); }" icon="mdi-plus"
           style="color: white;"></v-btn>
       </v-toolbar>
 
       <v-expansion-panels v-for="(task, _) in tasks" :key="JSON.stringify(task)">
-        <task-item :task="task" :update-callback="async () => { await fetchCommonTasks(); }" />
+        <task-item :task="task" :update-callback="async () => { await fetch(); }" />
       </v-expansion-panels>
     </v-card>
   </template>

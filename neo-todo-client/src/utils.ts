@@ -1,11 +1,6 @@
 
 import { Body, getClient } from "@tauri-apps/api/http";
-import { Interface } from "readline";
 export const base_url = 'http://127.0.0.1:8000';
-
-const post_headers = {
-  'Content-Type': 'application/x-www-form-urlencoded',
-};
 
 export interface CommonTask {
   id: number,
@@ -69,6 +64,22 @@ export function taskIcon(kind: number): string {
     return 'mdi-alert-box-outline'
   }
   return 'mdi-altimeter'
+}
+
+
+export async function fetchAllCommonTasks() {
+
+  console.log('fectched');
+
+  const client = await getClient();
+  const response = await client.request({
+    method: 'GET',
+    url: `${base_url}/fetch/all-common-tasks`,
+  });
+
+  console.log("fetchAllCommonTasks", response);
+
+  return response.data as CommonTask[];
 }
 
 export async function createNewTask() {
