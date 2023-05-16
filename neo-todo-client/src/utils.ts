@@ -1,6 +1,6 @@
 
 import { Body, getClient } from "@tauri-apps/api/http";
-export const base_url = 'http://127.0.0.1:8000';
+export const baseUrl = 'http://127.0.0.1:8000';
 
 export interface CommonTask {
   id: number,
@@ -44,6 +44,12 @@ export interface Tag {
   name: string,
 }
 
+export interface Category {
+  id: number,
+  name: string,
+  description: string,
+}
+
 export function taskKind(kind: number): string {
   if (kind === 0) {
     return 'Common Task'
@@ -74,7 +80,7 @@ export async function fetchAllCommonTasks() {
   const client = await getClient();
   const response = await client.request({
     method: 'GET',
-    url: `${base_url}/fetch/all-common-tasks`,
+    url: `${baseUrl}/fetch/all-common-tasks`,
   });
 
   console.log("fetchAllCommonTasks", response);
@@ -84,7 +90,7 @@ export async function fetchAllCommonTasks() {
 
 export async function createNewTask() {
   const client = await getClient();
-  const request_url = `${base_url}/create/common-task`;
+  const requestUrl = `${baseUrl}/create/common-task`;
 
   const data: CommonTask = {
     id: 0,
@@ -96,7 +102,7 @@ export async function createNewTask() {
 
   const response = await client.request({
     method: 'POST',
-    url: request_url,
+    url: requestUrl,
     body: Body.json(data),
   });
   console.log(response);
@@ -105,11 +111,11 @@ export async function createNewTask() {
 export async function updateCommonTask(task: CommonTask) {
 
   const client = await getClient();
-  const request_url = `${base_url}/update/update-common-task`;
+  const requestUrl = `${baseUrl}/update/update-common-task`;
 
   const response = await client.request({
     method: 'POST',
-    url: request_url,
+    url: requestUrl,
     body: Body.json(task),
   });
   console.log(response);
@@ -118,7 +124,7 @@ export async function updateCommonTask(task: CommonTask) {
 export async function updateDurationTask(task: DurationTask) {
 
   const client = await getClient();
-  const request_url = `${base_url}/update/update-duration-task`;
+  const requestUrl = `${baseUrl}/update/update-duration-task`;
   const data = {
     id: task.id,
     start_time: task.start_time,
@@ -127,7 +133,7 @@ export async function updateDurationTask(task: DurationTask) {
 
   const response = await client.request({
     method: 'POST',
-    url: request_url,
+    url: requestUrl,
     body: Body.json(data),
   });
 
@@ -136,14 +142,14 @@ export async function updateDurationTask(task: DurationTask) {
 
 export async function updateReminderTask(task: ReminderTask) {
   const client = await getClient();
-  const request_url = `${base_url}/update/update-reminder-task`;
+  const requestUrl = `${baseUrl}/update/update-reminder-task`;
   const data = {
     id: task.id,
     remind_time: task.remind_time
   }
   const response = await client.request({
     method: 'POST',
-    url: request_url,
+    url: requestUrl,
     body: Body.json(data),
   });
   console.log(response);
@@ -151,95 +157,95 @@ export async function updateReminderTask(task: ReminderTask) {
 
 export async function fetchCommonTask(id: number): Promise<CommonTask> {
   const client = await getClient();
-  const request_url = `${base_url}/fetch/common-task?id=${id}`;
+  const requestUrl = `${baseUrl}/fetch/common-task?id=${id}`;
   const response = await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
   return response.data as CommonTask;
 }
 
 export async function fetchDurationTask(id: number): Promise<DurationTask> {
   const client = await getClient();
-  const request_url = `${base_url}/fetch/duration-task?id=${id}`;
+  const requestUrl = `${baseUrl}/fetch/duration-task?id=${id}`;
   const response = await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
   return response.data as DurationTask;
 }
 
 export async function fetchReminderTask(id: number): Promise<ReminderTask> {
   const client = await getClient();
-  const request_url = `${base_url}/fetch/reminder-task?id=${id}`;
+  const requestUrl = `${baseUrl}/fetch/reminder-task?id=${id}`;
   const response = await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
   return response.data as ReminderTask;
 }
 
 export async function deleteCommonTask(id: number): Promise<void> {
   const client = await getClient();
-  const request_url = `${base_url}/delete/common-task?id=${id}`;
+  const requestUrl = `${baseUrl}/delete/common-task?id=${id}`;
   await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
 }
 
 export async function deleteReminderTask(id: number): Promise<void> {
   const client = await getClient();
-  const request_url = `${base_url}/delete/reminder-task?id=${id}`;
+  const requestUrl = `${baseUrl}/delete/reminder-task?id=${id}`;
   await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
 }
 
 export async function deleteDurationTask(id: number): Promise<void> {
   const client = await getClient();
-  const request_url = `${base_url}/delete/duration-task?id=${id}`;
+  const requestUrl = `${baseUrl}/delete/duration-task?id=${id}`;
   await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
 }
 
 export async function fetchAllTags(): Promise<Array<Tag>> {
   const client = await getClient();
-  const request_url = `${base_url}/fetch/all-tags`;
+  const requestUrl = `${baseUrl}/fetch/all-tags`;
   const response = await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
   return response.data as Array<Tag>;
 }
 
 export async function fetchTags(task_id: number): Promise<Array<Tag>> {
   const client = await getClient();
-  const request_url = `${base_url}/fetch/tags?task_id=${task_id}`;
+  const requestUrl = `${baseUrl}/fetch/tags?task_id=${task_id}`;
   const response = await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
   return response.data as Array<Tag>;
 }
 
-export async function addTag(tag: Tag) {
+export async function createTag(tag: Tag) {
   const client = await getClient();
-  const requestUrl = `${base_url}/create/tag`;
+  const requestUrl = `${baseUrl}/create/tag`;
   const response = await client.request({
     method: 'POST',
     url: requestUrl,
     body: Body.json(tag)
   });
-  console.log('addTag', response);
+  console.log('createTag', response);
 }
 
 export async function deleteTag(tag_id: number) {
   const client = await getClient();
-  const requestUrl = `${base_url}/delete/tag?id=${tag_id}`;
+  const requestUrl = `${baseUrl}/delete/tag?id=${tag_id}`;
   const response = await client.request({
     method: 'GET',
     url: requestUrl,
@@ -247,12 +253,55 @@ export async function deleteTag(tag_id: number) {
   console.log('deletTag', response);
 }
 
-export async function addTaskTag(task_id: number, tag_id: number) {
+export async function fetchAllCategories(): Promise<Category[]> {
   const client = await getClient();
-  const request_url = `${base_url}/update/add-task-tag`;
+  const requestUrl = `${baseUrl}/fetch/all-categories`;
+  const response = await client.request({
+    method: 'GET',
+    url: requestUrl,
+  });
+  console.log('fetchAllCategories', response);
+  return response.data as Category[];
+}
+
+export async function fetchCategory(category_id: number): Promise<Category> {
+  const client = await getClient();
+  const requestUrl = `${baseUrl}/fetch/category?id=${category_id}`;
+  const response = await client.request({
+    method: 'GET',
+    url: requestUrl,
+  });
+  console.log('fetchCategory', response);
+  return response.data as Category;
+}
+
+export async function createCategory(category: Category) {
+  const client = await getClient();
+  const requestUrl = `${baseUrl}/create/category`;
   const response = await client.request({
     method: 'POST',
-    url: request_url,
+    url: requestUrl,
+    body: Body.json(category)
+  });
+  console.log(response);
+}
+
+export async function deleteCategory(id: number) {
+  const client = await getClient();
+  const requestUrl = `${baseUrl}/delete/category?id=${id}`;
+  const response = await client.request({
+    method: 'GET',
+    url: requestUrl,
+  });
+  console.log(response);
+}
+
+export async function addTaskTag(task_id: number, tag_id: number) {
+  const client = await getClient();
+  const requestUrl = `${baseUrl}/update/add-task-tag`;
+  const response = await client.request({
+    method: 'POST',
+    url: requestUrl,
     body: Body.json({
       task_id: task_id,
       tag_id: tag_id
@@ -263,17 +312,17 @@ export async function addTaskTag(task_id: number, tag_id: number) {
 
 export async function deleteTaskTag(task_id: number, tag_id: number) {
   const client = await getClient();
-  const request_url = `${base_url}/delete/task-tag?task_id=${task_id}&tag_id=${tag_id}`;
+  const requestUrl = `${baseUrl}/delete/task-tag?task_id=${task_id}&tag_id=${tag_id}`;
   const response = await client.request({
     method: 'GET',
-    url: request_url,
+    url: requestUrl,
   });
   console.log(response);
 }
 
 export async function convertToCommonTask(task: DurationTask | ReminderTask | CommonTask) {
   const client = await getClient();
-  const request_url = `${base_url}/update/to-common-task`;
+  const requestUrl = `${baseUrl}/update/to-common-task`;
   const data = {
     id: task.id,
   }
@@ -283,7 +332,7 @@ export async function convertToCommonTask(task: DurationTask | ReminderTask | Co
 
   const response = await client.request({
     method: 'POST',
-    url: request_url,
+    url: requestUrl,
     body: Body.json(data),
   });
 
@@ -292,7 +341,7 @@ export async function convertToCommonTask(task: DurationTask | ReminderTask | Co
 }
 export async function convertToDurationTask(task: DurationTask | ReminderTask | CommonTask) {
   const client = await getClient();
-  const request_url = `${base_url}/update/to-duration-task`;
+  const requestUrl = `${baseUrl}/update/to-duration-task`;
   const data = {
     id: task.id,
     start_time: task.deadline || (new Date()).toISOString(),
@@ -304,16 +353,16 @@ export async function convertToDurationTask(task: DurationTask | ReminderTask | 
 
   const response = await client.request({
     method: 'POST',
-    url: request_url,
+    url: requestUrl,
     body: Body.json(data),
   });
 
   console.log(response);
-
 }
+
 export async function convertToReminderTask(task: DurationTask | ReminderTask | CommonTask) {
   const client = await getClient();
-  const request_url = `${base_url}/update/to-reminder-task`;
+  const requestUrl = `${baseUrl}/update/to-reminder-task`;
   const data = {
     id: task.id,
     remind_time: task.deadline || (new Date()).toISOString()
@@ -324,7 +373,7 @@ export async function convertToReminderTask(task: DurationTask | ReminderTask | 
 
   const response = await client.request({
     method: 'POST',
-    url: request_url,
+    url: requestUrl,
     body: Body.json(data),
   });
 

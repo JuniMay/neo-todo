@@ -1,10 +1,10 @@
 <script lang="ts">
 import { ref } from "vue";
 import { getClient } from "@tauri-apps/api/http";
-import axios from 'axios';
 
 import TaskItem from "./TaskItem.vue";
 import TagEdit from "./TagEdit.vue";
+import CategoryEdit from "./CategoryEdit.vue";
 import { CommonTask, createNewTask, fetchAllCommonTasks } from "../utils";
 import { defineComponent } from "vue";
 
@@ -12,9 +12,12 @@ import { defineComponent } from "vue";
 export default defineComponent({
   components: {
     TaskItem,
-    TagEdit
+    TagEdit,
+    CategoryEdit,
   },
   setup() {
+    const baseUrl = 'http://127.0.0.1:8000';
+
     const tasks = ref([] as CommonTask[]);
     const selectedTask = ref<CommonTask>();
 
@@ -27,7 +30,7 @@ export default defineComponent({
     const navPage = ref("pg_tasks");
 
     fetch();
-    
+
     return {
       tasks,
       selectedTask,
@@ -63,8 +66,7 @@ export default defineComponent({
   </template>
 
   <template v-else-if="navPage === 'pg_categories'">
-
-
+    <category-edit></category-edit>
   </template>
 
   <template v-else-if="navPage === 'pg_log'">

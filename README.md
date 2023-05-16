@@ -39,3 +39,9 @@ Available requests are listed as below:
 ## Client
 
 Frontend client is built with tauri + vue.js + vuetify. This is my first frontend application so some implementations are very crappy.
+
+## Todo List
+
+- [ ] Update category
+- [ ] Support logging of database (using triggers).
+- [ ] Better user interface.

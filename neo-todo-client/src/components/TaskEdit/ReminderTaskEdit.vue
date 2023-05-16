@@ -77,7 +77,7 @@ export default defineComponent({
 
 <template>
   <v-row dense>
-    <v-col cols="2">
+    <v-col cols="3">
       <v-text-field type="string" v-model="status" label="Status"></v-text-field>
     </v-col>
     <v-col>

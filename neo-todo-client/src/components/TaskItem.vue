@@ -1,7 +1,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon, Tag } from '../utils';
+import { taskKind, taskIcon, Tag, fetchCategory, fetchAllCategories, Category } from '../utils';
 import TaskEdit from './TaskEdit.vue';
 
 import { fetchDurationTask, fetchReminderTask, fetchTags, fetchAllTags, addTaskTag, deleteTaskTag } from '../utils';
@@ -20,6 +20,7 @@ export default defineComponent({
     const kind = ref(props.task.kind);
     const status = ref(props.task.status);
     const deadline = ref(props.task.deadline);
+    const category_id = ref(props.task.category_id);
 
     async function patchTask() {
       if (kind.value === 1) {
@@ -33,46 +34,60 @@ export default defineComponent({
 
     const tags = ref([] as Tag[]);
 
-    const task_tags = ref([] as Tag[])
-    let prev_task_tags = [] as Tag[];
+    const taskTags = ref([] as Tag[])
+    let prevTaskTags = [] as Tag[];
 
     async function loadTags() {
       tags.value = await fetchAllTags();
-      task_tags.value = await fetchTags(id.value);
-      prev_task_tags = task_tags.value.slice();
+      taskTags.value = await fetchTags(id.value);
+      prevTaskTags = taskTags.value.slice();
     }
 
     loadTags();
 
-    const tag_search = ref("");
+    const tagSearch = ref("");
 
     console.log(task);
     console.log(tags);
 
     async function updateTaskTags() {
-      console.log("task_tags", task_tags);
-      console.log("prev_task_tags", prev_task_tags);
+      console.log("taskTags", taskTags);
+      console.log("prevTaskTags", prevTaskTags);
 
-      let add_diff_tags = task_tags.value.filter(tag =>
-        prev_task_tags.some(prev_tag => tag.id === prev_tag.id) === false
+      let addDiffTags = taskTags.value.filter(tag =>
+        prevTaskTags.some(prevTag => tag.id === prevTag.id) === false
       );
 
-      let sub_diff_tags = prev_task_tags.filter(prev_tag =>
-        task_tags.value.some(tag => prev_tag.id === tag.id) === false
+      let subDiffTags = prevTaskTags.filter(prevTag =>
+        taskTags.value.some(tag => prevTag.id === tag.id) === false
       );
 
-      console.log("add_diff_tags", add_diff_tags);
-      console.log("sub_diff_tags", sub_diff_tags);
+      console.log("addDiffTags", addDiffTags);
+      console.log("subDiffTags", subDiffTags);
 
-      for (let i = 0; i < add_diff_tags.length; i++) {
-        await addTaskTag(id.value, add_diff_tags[i].id);
+      for (let i = 0; i < addDiffTags.length; i++) {
+        await addTaskTag(id.value, addDiffTags[i].id);
       }
-      for (let i = 0; i < sub_diff_tags.length; i++) {
-        await deleteTaskTag(id.value, sub_diff_tags[i].id);
+      for (let i = 0; i < subDiffTags.length; i++) {
+        await deleteTaskTag(id.value, subDiffTags[i].id);
       }
 
-      prev_task_tags = task_tags.value.slice();
+      prevTaskTags = taskTags.value.slice();
     }
+
+
+    const allCategories = ref([] as Category[]);
+    const category = ref<Category | null>(null);
+
+    async function loadCategory() {
+      allCategories.value = await fetchAllCategories();
+      // category.value = await fetchCategory(category_id.value);
+
+      // console.log('category', category);
+      console.log('allCategories', allCategories);
+    }
+
+    loadCategory();
 
     return {
       task,
@@ -85,9 +100,12 @@ export default defineComponent({
       taskKind,
       taskIcon,
       tags,
-      task_tags,
-      tag_search,
-      updateTaskTags
+      taskTags,
+      tagSearch,
+      updateTaskTags,
+      category,
+      allCategories,
+      loadCategory,
     }
   },
   props: {
@@ -129,7 +147,7 @@ export default defineComponent({
             </v-col>
           </v-row>
         </v-col>
-        <v-col cols="6">
+        <v-col cols="6" align-self="center">
           <v-row dense>
             <v-col>
               <div class="font-weight-bold text-h6">
@@ -156,13 +174,13 @@ export default defineComponent({
       </v-row>
       <v-row>
         <v-col>
-          <v-combobox v-model="task_tags" v-model:search="tag_search" :items="tags" multiple
+          <v-combobox v-model="taskTags" v-model:search="tagSearch" :items="tags" multiple
             :item-title="item => '#' + item.id + ' ' + item.name" :hide-no-data="false"
-            @update:model-value="updateTaskTags">
+            @update:model-value="updateTaskTags" label="Tags" density="comfortable" variant="outlined">
             <template v-slot:no-data>
               <v-list-item>
                 <v-list-item-title>
-                  No tags matching "<strong>{{ tag_search }}</strong>". Press <kbd>enter</kbd> to create a new one
+                  No tags matching "<strong>{{ tagSearch }}</strong>". Press <kbd>enter</kbd> to create a new one
                 </v-list-item-title>
               </v-list-item>
             </template>
@@ -172,6 +190,11 @@ export default defineComponent({
               </v-chip>
             </template>
           </v-combobox>
+        </v-col>
+        <v-col>
+          <v-select :items="allCategories" :item-title="item => '#' + item.id + ' ' + item.name" variant="outlined"
+            label="Category">
+          </v-select>
         </v-col>
       </v-row>
 
