@@ -1,6 +1,5 @@
 
-import axios from "axios";
-import { getClient } from "@tauri-apps/api/http";
+import { Body, getClient } from "@tauri-apps/api/http";
 export const base_url = 'http://127.0.0.1:8000';
 
 const post_headers = {
@@ -44,6 +43,11 @@ export interface ReminderTask {
   remind_time: string,
 }
 
+export interface Tag {
+  id: number,
+  name: string,
+}
+
 export function taskKind(kind: number): string {
   if (kind === 0) {
     return 'Common Task'
@@ -66,28 +70,51 @@ export function taskIcon(kind: number): string {
   return 'mdi-altimeter'
 }
 
-export function updateCommonTask(task: CommonTask): void {
-  const request_url = `${base_url}/update/update-common-task`
-  axios.post(request_url, JSON.stringify(task), { headers: post_headers })
+export async function updateCommonTask(task: CommonTask) {
+
+  const client = await getClient();
+  const request_url = `${base_url}/update/update-common-task`;
+
+  const response = await client.request({
+    method: 'POST',
+    url: request_url,
+    body: Body.json(task),
+  });
+  console.log(response);
 }
 
-export function updateDurationTask(task: DurationTask): void {
+export async function updateDurationTask(task: DurationTask) {
+
+  const client = await getClient();
   const request_url = `${base_url}/update/update-duration-task`;
   const data = {
     id: task.id,
     start_time: task.start_time,
     end_time: task.end_time
   }
-  axios.post(request_url, JSON.stringify(data), { headers: post_headers })
+
+  const response = await client.request({
+    method: 'POST',
+    url: request_url,
+    body: Body.json(data),
+  });
+
+  console.log(response);
 }
 
-export function updateReminderTask(task: ReminderTask): void {
+export async function updateReminderTask(task: ReminderTask) {
+  const client = await getClient();
   const request_url = `${base_url}/update/update-reminder-task`;
   const data = {
     id: task.id,
     remind_time: task.remind_time
   }
-  axios.post(request_url, JSON.stringify(data), { headers: post_headers })
+  const response = await client.request({
+    method: 'POST',
+    url: request_url,
+    body: Body.json(data),
+  });
+  console.log(response);
 }
 
 export async function fetchCommonTask(id: number): Promise<CommonTask> {
@@ -145,4 +172,24 @@ export async function deleteDurationTask(id: number): Promise<void> {
     method: 'GET',
     url: request_url,
   });
+}
+
+export async function fetchAllTags(): Promise<Array<Tag>> {
+  const client = await getClient();
+  const request_url = `${base_url}/fetch/all-tags`;
+  const response = await client.request({
+    method: 'GET',
+    url: request_url,
+  });
+  return response.data as Array<Tag>;
+}
+
+export async function fetchTags(task_id: number): Promise<Array<Tag>> {
+  const client = await getClient();
+  const request_url = `${base_url}/fetch/tags?task_id=${task_id}`;
+  const response = await client.request({
+    method: 'GET',
+    url: request_url,
+  });
+  return response.data as Array<Tag>;
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
 
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon, deleteReminderTask } from '../../utils';
+import { taskKind, taskIcon, deleteReminderTask, ReminderTask, updateReminderTask, CommonTask, updateCommonTask } from '../../utils';
 
 export default defineComponent({
   name: "ReminderTaskEdit",
@@ -9,23 +9,53 @@ export default defineComponent({
     const id = ref(props.task.id);
     const title = ref(props.task.title);
     const description = ref(props.task.description);
-    const kind = ref(props.task.kind);
     const status = ref(props.task.status);
     const deadline = ref(props.task.deadline);
 
     const remind_time = ref(props.task.remind_time);
 
+
+    async function save() {
+      let new_common_task: CommonTask = {
+        id: id.value,
+        title: title.value,
+        kind: 2,
+        description: description.value,
+        status: status.value,
+        deadline: deadline.value,
+        category_id: props.task.category_id,
+        priority: props.task.priority,
+      }
+
+      await updateCommonTask(new_common_task);
+
+      let new_task: ReminderTask = {
+        id: id.value,
+        title: title.value,
+        description: description.value,
+        status: status.value,
+        deadline: deadline.value,
+        category_id: props.task.category_id,
+        priority: props.task.priority,
+        remind_time: remind_time.value,
+      }
+
+      await updateReminderTask(new_task);
+      await props.updateCallback();
+    }
+
+
     return {
       id,
       title,
       description,
-      kind,
       status,
       deadline,
       taskKind,
       taskIcon,
       remind_time,
-      deleteReminderTask
+      deleteReminderTask,
+      save
     }
 
   },
@@ -70,7 +100,7 @@ export default defineComponent({
   </v-row>
   <v-row>
     <v-btn prepend-icon="mdi-cancel" elevation="0">Cancel</v-btn>
-    <v-btn prepend-icon="mdi-content-save" elevation="0">Save</v-btn>
+    <v-btn prepend-icon="mdi-content-save" elevation="0" @click="async () => { await save(); }">Save</v-btn>
 
     <v-menu>
       <template v-slot:activator="{ props }">

@@ -1,10 +1,10 @@
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon } from '../utils';
+import { taskKind, taskIcon, Tag } from '../utils';
 import TaskEdit from './TaskEdit.vue';
 
-import { fetchDurationTask, fetchReminderTask } from '../utils';
+import { fetchDurationTask, fetchReminderTask, fetchTags, fetchAllTags } from '../utils';
 
 export default defineComponent({
   name: 'TodoItem',
@@ -31,7 +31,16 @@ export default defineComponent({
 
     patchTask();
 
+    // const tags = ref(fetchTags(id.value));
+
+    const tags = ref<Array<Tag>>([]);
+
+    (async () => {
+      tags.value = await fetchAllTags();
+    })();
+
     console.log(task);
+    console.log(tags);
 
     return {
       task,
@@ -43,6 +52,7 @@ export default defineComponent({
       deadline,
       taskKind,
       taskIcon,
+      tags
     }
   },
   props: {
@@ -89,6 +99,15 @@ export default defineComponent({
     </v-expansion-panel-title>
 
     <v-expansion-panel-text>
+      <v-container>
+        <v-row justify="start">
+          <v-col dense v-for="(tag, _) in tags" :key="(tag as Tag).id" cols="auto" class="py-1 pe-0">
+            <v-chip closable>
+              {{ tag.name }}
+            </v-chip>
+          </v-col>
+        </v-row>
+      </v-container>
       <TaskEdit :task="task" :kind="kind" :update-callback="() => { updateCallback(); }"></TaskEdit>
     </v-expansion-panel-text>
   </v-expansion-panel>

@@ -1,7 +1,7 @@
 <script lang="ts">
 
 import { defineComponent, ref } from 'vue';
-import { taskKind, taskIcon, deleteCommonTask } from '../../utils';
+import { taskKind, taskIcon, deleteCommonTask, CommonTask, updateCommonTask } from '../../utils';
 
 export default defineComponent({
   name: "CommonTaskEdit",
@@ -13,6 +13,22 @@ export default defineComponent({
     const status = ref(props.task.status);
     const deadline = ref(props.task.deadline);
 
+    async function save() {
+      let new_task: CommonTask = {
+        id: id.value,
+        title: title.value,
+        description: description.value,
+        kind: kind.value,
+        status: status.value,
+        deadline: deadline.value,
+        category_id: props.task.category_id,
+        priority: props.task.priority,
+      }
+
+      await updateCommonTask(new_task);
+      await props.updateCallback();
+    }
+
     return {
       id,
       title,
@@ -22,9 +38,9 @@ export default defineComponent({
       deadline,
       taskKind,
       taskIcon,
-      deleteCommonTask
+      deleteCommonTask,
+      save
     }
-
   },
   props: {
     task: {
@@ -64,7 +80,7 @@ export default defineComponent({
   </v-row>
   <v-row>
     <v-btn prepend-icon="mdi-cancel" elevation="0">Cancel</v-btn>
-    <v-btn prepend-icon="mdi-content-save" elevation="0">Save</v-btn>
+    <v-btn prepend-icon="mdi-content-save" elevation="0" @click="async () => { await save(); }">Save</v-btn>
 
     <v-menu>
       <template v-slot:activator="{ props }">
@@ -86,7 +102,8 @@ export default defineComponent({
         </v-card-text>
       </v-card>
     </v-menu>
-    <v-btn prepend-icon="mdi-delete" elevation="0" @click="async () => { await deleteCommonTask(id); await updateCallback(); }">Delete</v-btn>
+    <v-btn prepend-icon="mdi-delete" elevation="0"
+      @click="async () => { await deleteCommonTask(id); await updateCallback(); }">Delete</v-btn>
 
   </v-row>
   <v-row></v-row>

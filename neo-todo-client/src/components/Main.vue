@@ -21,7 +21,7 @@ export default defineComponent({
 
     const base_url = 'http://127.0.0.1:8000';
 
-    const tasks = ref<CommonTask[]>([]);
+    const tasks = ref([] as CommonTask[]);
     const selectedTask = ref<CommonTask>();
 
     const currDialogKind = ref(DialogKind.None);
@@ -37,7 +37,9 @@ export default defineComponent({
         url: `${base_url}/fetch/all-common-tasks`,
       });
 
+
       tasks.value = response.data as CommonTask[];
+      console.log(tasks)
     }
 
     function openAddDialog() {
@@ -75,8 +77,8 @@ export default defineComponent({
       <v-btn class="ma-2" @click="openAddDialog()" icon="mdi-plus" style="color: white;"></v-btn>
     </v-toolbar>
 
-    <v-expansion-panels v-for="(task, _) in tasks" :key="(task as CommonTask).id">
-      <task-item :task="task" :update-callback="() => { fetchCommonTasks(); }" />
+    <v-expansion-panels v-for="(task, _) in tasks" :key="'(' + task.id + ',' + task.title + ',' + task.status + ')'">
+      <task-item :task="task" :update-callback="async () => { await fetchCommonTasks(); }" />
     </v-expansion-panels>
 
     <v-dialog v-model="isDialogOpen" max-width="500px" v-if="selectedTask">
