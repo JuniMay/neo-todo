@@ -4,7 +4,7 @@ import { defineComponent, ref } from 'vue';
 import { taskKind, taskIcon, Tag, fetchCategory, fetchAllCategories, Category } from '../utils';
 import TaskEdit from './TaskEdit.vue';
 
-import { fetchDurationTask, fetchReminderTask, fetchTags, fetchAllTags, addTaskTag, deleteTaskTag } from '../utils';
+import { fetchDurationTask, fetchReminderTask, CommonTask, fetchTags, fetchAllTags, addTaskTag, deleteTaskTag, updateCommonTask } from '../utils';
 
 export default defineComponent({
   name: 'TodoItem',
@@ -81,10 +81,34 @@ export default defineComponent({
 
     async function loadCategory() {
       allCategories.value = await fetchAllCategories();
-      // category.value = await fetchCategory(category_id.value);
 
-      // console.log('category', category);
+      if (category_id.value === null) {
+        category.value = null;
+      } else {
+        category.value = await fetchCategory(category_id.value);
+      }
+
+      console.log('category', category);
       console.log('allCategories', allCategories);
+    }
+
+    async function updateCategory() {
+      console.log('new category', category);
+
+      let newCommonTask: CommonTask = {
+        id: id.value,
+        title: title.value,
+        kind: 2,
+        description: description.value,
+        status: status.value,
+        deadline: deadline.value,
+        category_id: category.value?.id,
+        priority: props.task.priority,
+      }
+
+      console.log('newCommonTask', newCommonTask);
+
+      await updateCommonTask(newCommonTask);
     }
 
     loadCategory();
@@ -106,6 +130,7 @@ export default defineComponent({
       category,
       allCategories,
       loadCategory,
+      updateCategory
     }
   },
   props: {
@@ -176,7 +201,7 @@ export default defineComponent({
         <v-col>
           <v-combobox v-model="taskTags" v-model:search="tagSearch" :items="tags" multiple
             :item-title="item => '#' + item.id + ' ' + item.name" :hide-no-data="false"
-            @update:model-value="updateTaskTags" label="Tags" density="comfortable" variant="outlined">
+            @update:model-value="updateTaskTags" label="Tags" variant="outlined">
             <template v-slot:no-data>
               <v-list-item>
                 <v-list-item-title>
@@ -185,15 +210,15 @@ export default defineComponent({
               </v-list-item>
             </template>
             <template v-slot:selection="x">
-              <v-chip color="#711a5f">
+              <v-chip color="#711a5f" size="x-small">
                 #{{ x.item.raw.id }}&nbsp;{{ x.item.raw.name }}
               </v-chip>
             </template>
           </v-combobox>
         </v-col>
         <v-col>
-          <v-select :items="allCategories" :item-title="item => '#' + item.id + ' ' + item.name" variant="outlined"
-            label="Category">
+          <v-select v-model="category" :items="allCategories" :item-title="item => '#' + item.id + ' ' + item.name"
+            :return-object="true" variant="outlined" label="Category" @update:model-value="updateCategory" clearable>
           </v-select>
         </v-col>
       </v-row>

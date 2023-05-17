@@ -5,7 +5,7 @@ import { Category, fetchAllCategories, deleteCategory, createCategory } from '..
 
 
 export default defineComponent({
-  name: "TagEdit",
+  name: "CategoryEdit",
   setup() {
 
     const categories = ref([] as Category[]);
