@@ -46,6 +46,25 @@ CREATE TABLE IF NOT EXISTS tbl_task_tag (
     PRIMARY KEY (task_id, tag_id)
 );
 
+CREATE TABLE IF NOT EXISTS tbl_task_audit_log(
+    log_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    task_id INT UNSIGNED NOT NULL,
+    old_status TEXT,
+    new_status TEXT,
+    audit_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (log_id)
+);
+
+CREATE TRIGGER trg_task_status_change
+AFTER UPDATE ON tbl_task
+FOR EACH ROW
+BEGIN
+    IF NEW.task_status <> OLD.task_status THEN
+        INSERT INTO tbl_task_audit_log (task_id, old_status, new_status, audit_date) 
+        VALUES (NEW.task_id, OLD.task_status, NEW.task_status, NOW());
+    END IF;
+END;
+
 ALTER TABLE
     tbl_duration_task
 ADD

@@ -50,6 +50,28 @@ export interface Category {
   description: string,
 }
 
+export interface AuditLog {
+  log_id: number,
+  task_id: number,
+  old_status: string,
+  new_status: string,
+  audit_date: string,
+}
+
+export async function fetchAllLogs(): Promise<AuditLog[]> {
+  console.log('fetching all audit logs.');
+
+  const client = await getClient();
+  const response = await client.request({
+    method: 'GET',
+    url: `${baseUrl}/fetch/all-logs`,
+  });
+
+  console.log("fetchAllLogs", response);
+
+  return response.data as AuditLog[];
+}
+
 export function taskKind(kind: number): string {
   if (kind === 0) {
     return 'Common Task'

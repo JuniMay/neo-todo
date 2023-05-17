@@ -5,6 +5,8 @@ import { getClient } from "@tauri-apps/api/http";
 import TaskItem from "./TaskItem.vue";
 import TagEdit from "./TagEdit.vue";
 import CategoryEdit from "./CategoryEdit.vue";
+import LogPage from "./LogPage.vue";
+
 import { CommonTask, createNewTask, fetchAllCommonTasks } from "../utils";
 import { defineComponent } from "vue";
 
@@ -14,6 +16,7 @@ export default defineComponent({
     TaskItem,
     TagEdit,
     CategoryEdit,
+    LogPage,
   },
   setup() {
     const baseUrl = 'http://127.0.0.1:8000';
@@ -70,8 +73,7 @@ export default defineComponent({
   </template>
 
   <template v-else-if="navPage === 'pg_log'">
-
-
+    <log-page></log-page>
   </template>
 
   <!-- I cannot figure out how to prevent the bottom navigation from blocking contents so I just simply add some rows here.-->

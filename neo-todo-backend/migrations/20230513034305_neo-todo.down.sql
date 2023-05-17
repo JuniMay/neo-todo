@@ -28,6 +28,8 @@ DROP PROCEDURE update_common;
 
 DROP PROCEDURE add_task_tag;
 
+DROP TRIGGER trg_task_status_change;
+
 DROP VIEW v_duration_task;
 
 DROP VIEW v_reminder_task;

@@ -830,6 +830,35 @@ DELETE FROM tbl_task_tag WHERE task_id = ? AND tag_id = ?",
     Ok(())
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct AuditLog {
+    log_id: u32,
+    task_id: u32,
+    old_status: String,
+    new_status: String,
+    audit_date: DateTime<Utc>,
+}
+
+#[get("/all-logs")]
+async fn fetch_all_logs(mut db: Connection<Db>) -> Result<Json<Vec<AuditLog>>, TodoError> {
+    let result = sqlx::query(
+        "
+SELECT * FROM tbl_task_audit_log",
+    )
+    .fetch_all(&mut *db)
+    .await?
+    .into_iter()
+    .map(|row| AuditLog {
+        log_id: row.get(0),
+        task_id: row.get(1),
+        old_status: row.get(2),
+        new_status: row.get(3),
+        audit_date: row.get(4),
+    })
+    .collect();
+    Ok(Json(result))
+}
+
 #[rocket::main]
 async fn main() -> anyhow::Result<()> {
     let rocket = rocket::build();
@@ -859,6 +888,7 @@ async fn main() -> anyhow::Result<()> {
                 fetch_tags,
                 fetch_all_categories,
                 fetch_category,
+                fetch_all_logs,
             ],
         )
         .mount(

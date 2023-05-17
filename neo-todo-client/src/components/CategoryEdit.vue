@@ -43,7 +43,7 @@ export default defineComponent({
   <v-card rounded="0">
 
     <v-toolbar color="#711a5f">
-      <v-toolbar-title style="color: white;">NEO TODO - Categories</v-toolbar-title>
+      <v-toolbar-title style="color: white;">NEO TODO</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn class="ma-2" @click="loadTags()" icon="mdi-sync" style="color: white;"></v-btn>
       <v-btn class="ma-2" @click="openDialog()" icon="mdi-plus" style="color: white;"></v-btn>
@@ -86,8 +86,6 @@ export default defineComponent({
         <v-divider></v-divider>
         <v-card-text>
           <v-text-field v-model="categoryName" label="Name"></v-text-field>
-        </v-card-text>
-        <v-card-text>
           <v-text-field v-model="categoryDescription" label="Description"></v-text-field>
         </v-card-text>
         <v-card-actions class="justify-end">
