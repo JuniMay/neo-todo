@@ -1,10 +1,14 @@
 #[macro_use]
 extern crate rocket;
 
+use std::io::Cursor;
+
 use chrono::prelude::*;
 use neo_todo::{
     Category, CategoryID, CommonTask, DurationTask, ReminderTask, Tag, TagID, TaskID, TaskTag,
 };
+use rocket::http::ContentType;
+use rocket::Response;
 use rocket::{http::Status, response::Responder, serde::json::Json};
 use rocket_db_pools::{
     sqlx::{self, Row},
@@ -17,24 +21,32 @@ use sqlx::Acquire;
 #[database("todo_db")]
 struct Db(sqlx::MySqlPool);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 enum TodoError {
     NotFound,
-    InternalServerError,
+    InternalServerError(String),
 }
 
 impl<'r> Responder<'r, 'static> for TodoError {
     fn respond_to(self, _: &'r rocket::Request<'_>) -> rocket::response::Result<'static> {
         match self {
             TodoError::NotFound => Err(Status::NotFound),
-            TodoError::InternalServerError => Err(Status::InternalServerError),
+            TodoError::InternalServerError(info) => Response::build()
+                .header(ContentType::Plain)
+                .status(Status::InternalServerError)
+                .sized_body(info.len(), Cursor::new(info))
+                .ok(),
         }
     }
 }
 
 impl From<sqlx::Error> for TodoError {
-    fn from(_: sqlx::Error) -> Self {
-        TodoError::InternalServerError
+    fn from(err: sqlx::Error) -> Self {
+        let database_err = err.as_database_error();
+        if let Some(db_err) = database_err {
+            return TodoError::InternalServerError(db_err.message().to_string());
+        }
+        TodoError::InternalServerError("".to_string())
     }
 }
 
@@ -339,6 +351,8 @@ async fn create_common_task(
     let status = common_task.status;
     let category_id = common_task.category_id;
 
+    let kind = common_task.kind;
+
     let insert_result = sqlx::query(
         "
 INSERT INTO tbl_task (
@@ -357,7 +371,8 @@ INSERT INTO tbl_task (
     .bind(priority)
     .bind(status)
     .bind(category_id)
-    .bind(0)
+    // .bind(0)
+    .bind(kind) // This is for the database system course report.
     .execute(&mut *db)
     .await?;
 

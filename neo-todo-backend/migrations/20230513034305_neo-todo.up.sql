@@ -65,6 +65,13 @@ BEGIN
     END IF;
 END;
 
+CREATE TRIGGER trg_check_task_kind BEFORE INSERT ON tbl_task FOR EACH ROW
+BEGIN
+    IF NEW.kind NOT IN (0, 1, 2) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid task kind when inserting into tbl_task';
+    END IF;
+END;
+
 ALTER TABLE
     tbl_duration_task
 ADD
@@ -131,6 +138,7 @@ BEGIN
     BEGIN
         -- ERROR occurred, rollback
         ROLLBACK;
+        RESIGNAL;
     END;
 
     START TRANSACTION;
@@ -152,6 +160,7 @@ CREATE PROCEDURE to_duration(
     BEGIN
         -- ERROR occurred, rollback
         ROLLBACK;
+        RESIGNAL;
     END;
 
     START TRANSACTION;
@@ -176,6 +185,7 @@ CREATE PROCEDURE to_reminder(
     BEGIN
         -- ERROR occurred, rollback
         ROLLBACK;
+        RESIGNAL;
     END;
 
     START TRANSACTION;
@@ -198,6 +208,7 @@ CREATE PROCEDURE update_duration(
     BEGIN
         -- ERROR occurred, rollback
         ROLLBACK;
+        RESIGNAL;
     END;
 
     START TRANSACTION;
@@ -219,6 +230,7 @@ CREATE PROCEDURE update_reminder(
     BEGIN
         -- ERROR occurred, rollback
         ROLLBACK;
+        RESIGNAL;
     END;
 
     START TRANSACTION;
@@ -246,6 +258,7 @@ CREATE PROCEDURE update_common(
     BEGIN
         -- ERROR occurred, rollback
         ROLLBACK;
+        RESIGNAL;
     END;
 
     START TRANSACTION;
@@ -273,6 +286,7 @@ CREATE PROCEDURE add_task_tag(
     BEGIN
         -- ERROR occurred, rollback
         ROLLBACK;
+        RESIGNAL;
     END;
 
     START TRANSACTION;
@@ -293,4 +307,3 @@ CREATE PROCEDURE add_task_tag(
 
     COMMIT;
 END;
-
