@@ -857,7 +857,18 @@ SELECT * FROM tbl_task_audit_log",
 
 #[rocket::main]
 async fn main() -> anyhow::Result<()> {
-    let rocket = rocket::build();
+    let figment = rocket::Config::figment().merge(
+        ("databases.todo_db", rocket_db_pools::Config {
+            url: "mysql://root:123456@0.0.0.0:3306/TestTodoDB".into(),
+            min_connections: None,
+            max_connections: 1024,
+            connect_timeout: 3,
+            idle_timeout: None
+        })
+    );
+
+    let rocket = rocket::custom(figment);
+    
     rocket
         .attach(Db::init())
         .mount("/", routes![index,])
