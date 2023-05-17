@@ -47,3 +47,5 @@ DROP TABLE tbl_tag;
 DROP TABLE tbl_task;
 
 DROP TABLE tbl_task_tag;
+
+DROP TABLE tbl_task_audit_log;

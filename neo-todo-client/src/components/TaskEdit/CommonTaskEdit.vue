@@ -18,7 +18,7 @@ export default defineComponent({
         id: id.value,
         title: title.value,
         description: description.value,
-        kind: kind.value,
+        kind: 0,
         status: status.value,
         deadline: deadline.value,
         category_id: props.task.category_id,

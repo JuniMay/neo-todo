@@ -7,7 +7,7 @@ import TagEdit from "./TagEdit.vue";
 import CategoryEdit from "./CategoryEdit.vue";
 import LogPage from "./LogPage.vue";
 
-import { CommonTask, createNewTask, fetchAllCommonTasks } from "../utils";
+import { Task, createNewTask, fetchAllTasks } from "../utils";
 import { defineComponent } from "vue";
 
 
@@ -21,12 +21,11 @@ export default defineComponent({
   setup() {
     const baseUrl = 'http://127.0.0.1:8000';
 
-    const tasks = ref([] as CommonTask[]);
-    const selectedTask = ref<CommonTask>();
+    const tasks = ref([] as Task[]);
 
 
     async function fetch() {
-      tasks.value = await fetchAllCommonTasks();
+      tasks.value = await fetchAllTasks();
       console.log(tasks)
     }
 
@@ -36,7 +35,6 @@ export default defineComponent({
 
     return {
       tasks,
-      selectedTask,
       fetch,
       createNewTask,
       navPage,

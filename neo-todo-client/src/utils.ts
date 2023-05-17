@@ -1,8 +1,13 @@
 
-import { Body, getClient } from "@tauri-apps/api/http";
+import { Body, fetch, getClient } from "@tauri-apps/api/http";
 export const baseUrl = 'http://127.0.0.1:8000';
 
-export interface CommonTask {
+export interface Task {
+  id: number,
+  title: string,
+}
+
+export type CommonTask = {
   id: number,
   title: string,
   description?: string,
@@ -14,7 +19,7 @@ export interface CommonTask {
   kind: number,
 }
 
-export interface DurationTask {
+export type DurationTask = {
   id: number,
   title: string,
   description?: string,
@@ -27,7 +32,7 @@ export interface DurationTask {
   end_time: string
 }
 
-export interface ReminderTask {
+export type ReminderTask = {
   id: number,
   title: string,
   description?: string,
@@ -39,18 +44,18 @@ export interface ReminderTask {
   remind_time: string,
 }
 
-export interface Tag {
+export type Tag = {
   id: number,
   name: string,
 }
 
-export interface Category {
+export type Category = {
   id: number,
   name: string,
   description: string,
 }
 
-export interface AuditLog {
+export type AuditLog = {
   log_id: number,
   task_id: number,
   old_status: string,
@@ -95,7 +100,7 @@ export function taskIcon(kind: number): string {
 }
 
 
-export async function fetchAllCommonTasks() {
+export async function fetchAllTasks() {
 
   console.log('fectched');
 
@@ -105,9 +110,19 @@ export async function fetchAllCommonTasks() {
     url: `${baseUrl}/fetch/all-common-tasks`,
   });
 
-  console.log("fetchAllCommonTasks", response);
+  console.log("fetchAllTasks", response);
 
-  return response.data as CommonTask[];
+  let allTasks = response.data as Task[];
+
+  for (let i = 0; i < allTasks.length; i++) {
+    if ((allTasks[i] as CommonTask).kind === 1) {
+      allTasks[i] = await fetchDurationTask(allTasks[i].id) as DurationTask;
+    } else if ((allTasks[i] as CommonTask).kind === 2) {
+      allTasks[i] = await fetchReminderTask(allTasks[i].id) as ReminderTask;
+    }
+  }
+
+  return allTasks;
 }
 
 export async function createNewTask() {

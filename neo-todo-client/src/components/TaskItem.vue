@@ -4,7 +4,7 @@ import { defineComponent, ref } from 'vue';
 import { taskKind, taskIcon, Tag, fetchCategory, fetchAllCategories, Category } from '../utils';
 import TaskEdit from './TaskEdit.vue';
 
-import { fetchDurationTask, fetchReminderTask, CommonTask, fetchTags, fetchAllTags, addTaskTag, deleteTaskTag, updateCommonTask } from '../utils';
+import { DurationTask, ReminderTask, CommonTask, fetchTags, fetchAllTags, addTaskTag, deleteTaskTag, updateCommonTask } from '../utils';
 
 export default defineComponent({
   name: 'TodoItem',
@@ -17,25 +17,23 @@ export default defineComponent({
     const id = ref(props.task.id);
     const title = ref(props.task.title);
     const description = ref(props.task.description);
-    const kind = ref(props.task.kind);
+    
     const status = ref(props.task.status);
     const deadline = ref(props.task.deadline);
     const category_id = ref(props.task.category_id);
-
-    async function patchTask() {
-      if (kind.value === 1) {
-        task.value = await fetchDurationTask(id.value);
-      } else if (kind.value === 2) {
-        task.value = await fetchReminderTask(id.value);
-      }
-    }
-
-    patchTask();
 
     const tags = ref([] as Tag[]);
 
     const taskTags = ref([] as Tag[])
     let prevTaskTags = [] as Tag[];
+
+    const kind = ref(0);
+
+    if ("start_time" in props.task) {
+      kind.value = 1;
+    } else if ("remind_time" in props.task){
+      kind.value = 2;
+    }
 
     async function loadTags() {
       tags.value = await fetchAllTags();
@@ -98,7 +96,7 @@ export default defineComponent({
       let newCommonTask: CommonTask = {
         id: id.value,
         title: title.value,
-        kind: 2,
+        kind: kind.value,
         description: description.value,
         status: status.value,
         deadline: deadline.value,
@@ -130,7 +128,7 @@ export default defineComponent({
       category,
       allCategories,
       loadCategory,
-      updateCategory
+      updateCategory,
     }
   },
   props: {
@@ -223,7 +221,9 @@ export default defineComponent({
         </v-col>
       </v-row>
 
-      <TaskEdit :task="task" :kind="kind" :update-callback="() => { updateCallback(); }"></TaskEdit>
+      <TaskEdit :task="task" :kind="kind" :update-callback="async () => {
+        await updateCallback();
+      }"></TaskEdit>
     </v-expansion-panel-text>
   </v-expansion-panel>
 </template>

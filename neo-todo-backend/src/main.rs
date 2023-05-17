@@ -203,17 +203,7 @@ async fn fetch_duration_task(
 ) -> Result<Json<DurationTask>, TodoError> {
     let result = sqlx::query(
         "
-SELECT 
-    task_id, 
-    task_title, 
-    task_description, 
-    task_deadline, 
-    task_priority, 
-    task_status, 
-    category_id, 
-    start_time, 
-    end_time
-FROM v_duration_task WHERE task_id = ?",
+SELECT * FROM v_duration_task WHERE task_id = ?",
     )
     .bind(id)
     .fetch_one(&mut *db)
@@ -242,16 +232,7 @@ async fn fetch_reminder_task(
 ) -> Result<Json<ReminderTask>, TodoError> {
     let result = sqlx::query(
         "
-SELECT 
-    task_id, 
-    task_title, 
-    task_description, 
-    task_deadline, 
-    task_priority, 
-    task_status, 
-    category_id, 
-    remind_time
-FROM v_reminder_task WHERE task_id = ?",
+SELECT * FROM v_reminder_task WHERE task_id = ?",
     )
     .bind(id)
     .fetch_one(&mut *db)

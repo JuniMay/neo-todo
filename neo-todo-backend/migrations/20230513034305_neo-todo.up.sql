@@ -90,15 +90,32 @@ ALTER TABLE
 ADD
     CONSTRAINT fk_task_tag_2 FOREIGN KEY (tag_id) REFERENCES tbl_tag (tag_id);
 
+-- exclude kind.
 CREATE VIEW v_duration_task AS
 SELECT
-    *
+    task_id, 
+    task_title, 
+    task_description, 
+    task_deadline, 
+    task_priority, 
+    task_status, 
+    category_id, 
+    start_time, 
+    end_time
 FROM
     tbl_task NATURAL JOIN tbl_duration_task;
 
+-- exclude kind.
 CREATE VIEW v_reminder_task AS
 SELECT
-    *
+    task_id, 
+    task_title, 
+    task_description, 
+    task_deadline, 
+    task_priority, 
+    task_status, 
+    category_id, 
+    remind_time
 FROM
     tbl_task NATURAL JOIN tbl_reminder_task;
 

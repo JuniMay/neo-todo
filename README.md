@@ -45,3 +45,7 @@ Frontend client is built with tauri + vue.js + vuetify. This is my first fronten
 - [ ] Update category
 - [ ] Support logging of database (using triggers).
 - [ ] Better user interface.
+
+## About
+
+This project is made for the assignment of NKU database system course.
