@@ -143,6 +143,10 @@ BEGIN
 
     START TRANSACTION;
     
+    IF (SELECT kind FROM tbl_task WHERE task_id = in_task_id) = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Task is already a common task';
+    END IF;
+
     DELETE FROM tbl_duration_task WHERE task_id = in_task_id;
     DELETE FROM tbl_reminder_task WHERE task_id = in_task_id;
 
@@ -165,8 +169,11 @@ CREATE PROCEDURE to_duration(
 
     START TRANSACTION;
 
+    IF (SELECT kind FROM tbl_task WHERE task_id = in_task_id) = 1 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Task is already a duration task';
+    END IF;
+
     -- overwrite
-    DELETE FROM tbl_duration_task WHERE task_id = in_task_id;
     DELETE FROM tbl_reminder_task WHERE task_id = in_task_id;
     
     INSERT INTO tbl_duration_task(task_id, start_time, end_time) 
@@ -189,9 +196,13 @@ CREATE PROCEDURE to_reminder(
     END;
 
     START TRANSACTION;
+
+    IF (SELECT kind FROM tbl_task WHERE task_id = in_task_id) = 2 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Task is already a reminder task';
+    END IF;
+
     -- overwrite
     DELETE FROM tbl_duration_task WHERE task_id = in_task_id;
-    DELETE FROM tbl_reminder_task WHERE task_id = in_task_id;
     
     INSERT INTO tbl_reminder_task(task_id, remind_time) VALUES(in_task_id, in_remind_time);
 

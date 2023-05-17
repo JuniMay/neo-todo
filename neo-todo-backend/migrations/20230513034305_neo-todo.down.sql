@@ -30,6 +30,8 @@ DROP PROCEDURE add_task_tag;
 
 DROP TRIGGER trg_task_status_change;
 
+DROP TRIGGER trg_check_task_kind;
+
 DROP VIEW v_duration_task;
 
 DROP VIEW v_reminder_task;
